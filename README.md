@@ -39,4 +39,4 @@ Then open the local URL shown in the terminal.
 MIT
 
 ### note:
-small parts of the site were ai generated, most notably (some) parts of the svg/art like the logo lol. the code was written by me for like 75% with exception for code help/learning and debugging (only if i couldnt do it myself). somone told me it looks very ai generated but ehhh i aint changing it i like how i did it and its not ai gen so
+small parts of the site were ai generated, most notably (some) parts of the svg/art like the logo lol. the code was written by me for like 75% with exception for code help/learning and debugging (only if i couldnt do it myself). somone told me it looks very ai generated but ehhh i aint changing it i like how i did it and its not ai gen so. oh yeah wait it also wrote a part of the css since my layout was very bad so thats why it might look very ai gen oopsie
