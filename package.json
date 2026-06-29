@@ -1,15 +1,13 @@
 {
   "name": "snowtab",
   "version": "1.0.0",
-  "private": false,
-  "description": "A clean Christmas focus homepage with quick links, a simple todo list, wallpapers, and a Pomodoro timer.",
+  "private": true,
+  "description": "A jolly homepage with quick links, todo list, Pomodoro timer, Christmas countdown, and illustrated wallpapers.",
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 5173",
-    "start": "python3 -m http.server 5173",
-    "build": "rm -rf dist && mkdir -p dist && cp -R index.html favicon.svg src wallpapers README.md LICENSE dist/",
-    "preview": "python3 -m http.server 5173 -d dist"
+    "build": "rm -rf dist && mkdir -p dist && cp -R index.html favicon.svg src wallpapers dist/"
   },
-  "keywords": ["homepage", "pomodoro", "christmas", "jolly", "productivity"],
-  "license": "MIT"
+  "devDependencies": {},
+  "dependencies": {}
 }
