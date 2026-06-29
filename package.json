@@ -1,0 +1,23 @@
+{
+  "name": "snowtab",
+  "version": "1.0.0",
+  "private": false,
+  "description": "A jolly browser homepage with a Pomodoro timer, editable links, themes, and snow.",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "keywords": [
+    "homepage",
+    "pomodoro",
+    "jolly",
+    "productivity",
+    "christmas"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "latest"
+  }
+}
