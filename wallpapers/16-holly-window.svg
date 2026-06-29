@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="42%" r="75%">
+      <stop offset="0" stop-color="#36544e"/>
+      <stop offset="1" stop-color="#142f2b"/>
+    </radialGradient>
+    <pattern id="snow" width="120" height="120" patternUnits="userSpaceOnUse">
+      <circle cx="20" cy="28" r="2.4" fill="#fff" opacity=".55"/>
+      <circle cx="90" cy="70" r="1.8" fill="#fff" opacity=".45"/>
+      <circle cx="64" cy="18" r="1.3" fill="#fff" opacity=".35"/>
+      <circle cx="42" cy="100" r="1.7" fill="#fff" opacity=".4"/>
+    </pattern>
+    <linearGradient id="shine" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)"/>
+  <rect width="1200" height="800" fill="url(#snow)"/>
+  <circle cx="-60" cy="820" r="360" fill="#fff" opacity=".08"/>
+  <circle cx="1260" cy="-70" r="390" fill="#ffd475" opacity=".10"/>
+  
+<g transform="translate(690 360)">
+ <rect x="-190" y="-180" width="380" height="340" rx="28" fill="#1c4154"/><path d="M0 -180 v340M-190 -10 h380" stroke="#fff7d8" stroke-width="12" opacity=".6"/>
+ <circle cx="-75" cy="-75" r="12" fill="#fff" opacity=".8"/><circle cx="90" cy="-30" r="10" fill="#fff" opacity=".7"/><circle cx="32" cy="80" r="8" fill="#fff" opacity=".8"/>
+ <path d="M-120 185 q50 -90 100 0 q-50 -38 -100 0zM-10 185 q50 -90 100 0 q-50 -38 -100 0z" fill="#2fd075"/><circle cx="-24" cy="175" r="16" fill="#e84655"/><circle cx="2" cy="170" r="16" fill="#e84655"/>
+</g>
+  <rect width="1200" height="800" fill="url(#shine)"/>
+</svg>
