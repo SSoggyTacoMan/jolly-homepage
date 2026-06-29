@@ -1,25 +1,21 @@
 {
   "name": "snowtab",
-  "version": "1.5.0",
+  "version": "1.0.0",
   "private": false,
-  "description": "A polished Christmas themed study homepage with quick links, Pomodoro, tasks, countdown, settings, and a favicon.",
+  "description": "A Christmas themed focus homepage with quick links, tasks, wallpapers, and a Pomodoro timer.",
+  "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "dev": "python3 -m http.server 5173",
+    "start": "python3 -m http.server 5173",
+    "build": "rm -rf dist && mkdir -p dist && cp -R index.html favicon.svg src wallpapers README.md LICENSE dist/",
+    "preview": "python3 -m http.server 5173 -d dist"
   },
   "keywords": [
     "homepage",
     "pomodoro",
-    "todo",
-    "study",
+    "christmas",
     "jolly",
-    "christmas"
+    "productivity"
   ],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "postcss": "^8.4.49",
-    "vite": "^5.4.11"
-  }
+  "license": "MIT"
 }
