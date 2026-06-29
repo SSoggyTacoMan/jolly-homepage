@@ -119,7 +119,9 @@ function renderClock() {
   const hour = String(now.getHours()).padStart(2, "0");
   const minute = String(now.getMinutes()).padStart(2, "0");
   const second = String(now.getSeconds()).padStart(2, "0");
-  $("#clock").textContent = state.settings.clockSeconds ? `${hour}:${minute}:${second}` : `${hour}:${minute}`;
+  const clock = $("#clock");
+  clock.textContent = state.settings.clockSeconds ? `${hour}:${minute}:${second}` : `${hour}:${minute}`;
+  clock.classList.toggle("with-seconds", state.settings.clockSeconds);
 
   const options = { weekday: "long", day: "numeric", month: "long" };
   if (state.settings.showYear) options.year = "numeric";
