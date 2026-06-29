@@ -2,7 +2,7 @@
   "name": "snowtab",
   "version": "1.0.0",
   "private": false,
-  "description": "A Christmas themed focus homepage with quick links, tasks, wallpapers, and a Pomodoro timer.",
+  "description": "A clean Christmas focus homepage with quick links, a simple todo list, wallpapers, and a Pomodoro timer.",
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 5173",
@@ -10,12 +10,6 @@
     "build": "rm -rf dist && mkdir -p dist && cp -R index.html favicon.svg src wallpapers README.md LICENSE dist/",
     "preview": "python3 -m http.server 5173 -d dist"
   },
-  "keywords": [
-    "homepage",
-    "pomodoro",
-    "christmas",
-    "jolly",
-    "productivity"
-  ],
+  "keywords": ["homepage", "pomodoro", "christmas", "jolly", "productivity"],
   "license": "MIT"
 }
