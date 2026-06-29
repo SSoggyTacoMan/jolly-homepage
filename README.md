@@ -33,13 +33,10 @@ pnpm dev
 
 Then open the local URL shown in the terminal.
 
-## notes
-
-The app stores settings, links, and tasks in the browser with localStorage. Clearing site data will reset them.
 
 ## license
 
 MIT
 
 ### note:
-small parts of the site were ai generated, most notably (some) parts of the svg/art. the code was written by me for like 90% with exception for code help/learning and debugging (only if i couldnt do it myself). somone told me it looks very ai generated but ehhh i aint changing it i like how i did it and its not ai gen so
+small parts of the site were ai generated, most notably (some) parts of the svg/art like the logo lol. the code was written by me for like 75% with exception for code help/learning and debugging (only if i couldnt do it myself). somone told me it looks very ai generated but ehhh i aint changing it i like how i did it and its not ai gen so
