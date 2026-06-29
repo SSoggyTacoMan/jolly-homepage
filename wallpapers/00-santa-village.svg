@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#12315a"/>
+      <stop offset="0.48" stop-color="#173b4f"/>
+      <stop offset="1" stop-color="#0d3429"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff6bc" stop-opacity="1"/>
+      <stop offset="1" stop-color="#fff6bc" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="snow" width="150" height="150" patternUnits="userSpaceOnUse">
+      <circle cx="28" cy="35" r="2.6" fill="#fff" opacity=".7"/>
+      <circle cx="120" cy="95" r="2" fill="#fff" opacity=".48"/>
+      <circle cx="74" cy="18" r="1.4" fill="#fff" opacity=".45"/>
+      <circle cx="52" cy="132" r="1.7" fill="#fff" opacity=".5"/>
+    </pattern>
+    <linearGradient id="snowHill" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff8dd"/>
+      <stop offset="1" stop-color="#d5eef4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <rect width="1600" height="1000" fill="url(#snow)" opacity=".75"/>
+  <circle cx="1260" cy="190" r="170" fill="url(#moonGlow)"/>
+  <circle cx="1260" cy="190" r="75" fill="#fff1a8"/>
+
+  <g transform="translate(1010 245) rotate(-8)">
+    <path d="M-350 85 C-250 170 -80 170 18 88 C110 12 218 25 315 85" fill="none" stroke="#ffe28a" stroke-width="12" stroke-linecap="round"/>
+    <path d="M-245 45 C-210 -5 -145 -10 -100 34" fill="none" stroke="#7d4b31" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="-258" cy="48" r="16" fill="#7d4b31"/>
+    <path d="M-180 45 h190 c28 0 55 18 65 44 l10 28 h-245 c-33 0 -60 -27 -60 -60v-12z" fill="#d94248"/>
+    <path d="M-64 55 h102 c25 0 48 18 54 42l5 20h-155z" fill="#bb2d39"/>
+    <path d="M-168 42 h64 v74 h-64z" fill="#f6bf58" opacity=".9"/>
+    <circle cx="88" cy="42" r="32" fill="#ffd3b2"/>
+    <path d="M58 15 C90 -38 136 1 139 2 L121 20 C100 5 78 10 72 38" fill="#fff4d0"/>
+    <circle cx="128" cy="-2" r="12" fill="#fff4d0"/>
+  </g>
+
+  <g transform="translate(0 700)">
+    <path d="M0 125 C230 20 400 120 575 70 C805 5 985 45 1160 98 C1325 150 1440 90 1600 35 V300 H0Z" fill="url(#snowHill)"/>
+  </g>
+
+  <g transform="translate(185 615)">
+    <g fill="#31513d">
+      <path d="M20 160 L75 38 L130 160z"/><path d="M48 170 L75 92 L104 170z"/>
+      <path d="M180 165 L245 24 L310 165z"/><path d="M210 180 L245 95 L282 180z"/>
+      <path d="M1110 165 L1175 30 L1240 165z"/><path d="M1138 180 L1175 92 L1214 180z"/>
+    </g>
+    <g>
+      <path d="M420 0 L535 90 H305Z" fill="#f0f3f4"/>
+      <rect x="330" y="90" width="180" height="110" rx="8" fill="#a64f4d"/>
+      <rect x="365" y="122" width="42" height="48" rx="8" fill="#ffd86b"/>
+      <rect x="433" y="128" width="42" height="42" rx="8" fill="#ffd86b"/>
+    </g>
+    <g transform="translate(570 35)">
+      <path d="M125 0 L250 90 H0Z" fill="#f4f6f4"/>
+      <rect x="24" y="90" width="202" height="118" rx="10" fill="#8f4650"/>
+      <rect x="56" y="125" width="54" height="55" rx="9" fill="#ffe07b"/>
+      <rect x="140" y="125" width="54" height="55" rx="9" fill="#ffe07b"/>
+      <rect x="103" y="160" width="46" height="48" rx="8" fill="#4d2d31"/>
+    </g>
+    <g transform="translate(855 10)">
+      <path d="M110 0 L220 80 H0Z" fill="#f7f7f3"/>
+      <rect x="22" y="80" width="176" height="122" rx="10" fill="#b55748"/>
+      <rect x="52" y="116" width="48" height="52" rx="9" fill="#ffe07b"/>
+      <rect x="126" y="116" width="48" height="52" rx="9" fill="#ffe07b"/>
+    </g>
+  </g>
+
+  <path d="M0 930 C330 835 565 900 780 860 C1050 805 1265 875 1600 820 V1000 H0Z" fill="#fff8e8" opacity=".95"/>
+</svg>
