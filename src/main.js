@@ -1,6 +1,6 @@
-const STORAGE_KEY = 'snowtab-state-v4'
-const OLD_STORAGE_KEYS = ['snowtab-state-v3', 'snowtab-state-v2', 'snowtab-state-v1']
-const SESSION_KEY = 'snowtab-sessions-v2'
+const STORAGE_KEY = 'snowtab-state-v5'
+const OLD_STORAGE_KEYS = ['snowtab-state-v4', 'snowtab-state-v3', 'snowtab-state-v2', 'snowtab-state-v1']
+const SESSION_KEY = 'snowtab-sessions-v3'
 
 const defaultLinks = [
   { name: 'GitHub', url: 'https://github.com' },
@@ -17,17 +17,8 @@ const presets = {
 }
 
 const themes = ['holly', 'candy', 'cocoa', 'frost']
-
-const state = loadState()
-let selectedTodoId = state.selectedTodoId || null
-let timer = {
-  mode: 'focus',
-  running: false,
-  interval: null,
-  remaining: state.durations.focus,
-  total: state.durations.focus,
-  startedAt: null
-}
+const priorityRank = { high: 3, normal: 2, low: 1 }
+const priorityLabels = { high: 'High', normal: 'Normal', low: 'Low' }
 
 const els = {
   clock: document.querySelector('#clock'),
@@ -45,22 +36,29 @@ const els = {
   timerProgress: document.querySelector('#timer-progress'),
   startPause: document.querySelector('#start-pause'),
   resetTimer: document.querySelector('#reset-timer'),
-  skipMode: document.querySelector('#skip-mode'),
-  markCurrentDone: document.querySelector('#mark-current-done'),
+  finishEarly: document.querySelector('#finish-early'),
   addFive: document.querySelector('#add-five'),
   subOne: document.querySelector('#sub-one'),
   modeTabs: document.querySelectorAll('.mode-tab'),
   presetButtons: document.querySelectorAll('[data-preset]'),
   focusGoal: document.querySelector('#focus-goal'),
-  questText: document.querySelector('#quest-text'),
+  currentTaskTitle: document.querySelector('#current-task-title'),
+  currentTaskMeta: document.querySelector('#current-task-meta'),
+  nextBreakLabel: document.querySelector('#next-break-label'),
   roundDots: document.querySelector('#round-dots'),
   sessionPill: document.querySelector('#session-pill'),
   todoForm: document.querySelector('#todo-form'),
   todoInput: document.querySelector('#todo-input'),
+  todoPriority: document.querySelector('#todo-priority'),
+  todoEstimate: document.querySelector('#todo-estimate'),
   todoList: document.querySelector('#todo-list'),
   todoCount: document.querySelector('#todo-count'),
+  taskProgressText: document.querySelector('#task-progress-text'),
+  taskProgressFill: document.querySelector('#task-progress-fill'),
+  pickNextTask: document.querySelector('#pick-next-task'),
   clearDone: document.querySelector('#clear-done'),
   resetTodos: document.querySelector('#reset-todos'),
+  filterButtons: document.querySelectorAll('[data-filter]'),
   quickLinks: document.querySelector('#quick-links'),
   addLink: document.querySelector('#add-link'),
   linkDialog: document.querySelector('#link-dialog'),
@@ -104,9 +102,10 @@ function defaultState() {
   return {
     theme: 'holly',
     links: [...defaultLinks],
-    todos: [],
+    tasks: [],
+    selectedTaskId: null,
+    taskFilter: 'open',
     focusGoal: '',
-    selectedTodoId: null,
     durations: { focus: 25 * 60, short: 5 * 60, long: 15 * 60 },
     longBreakEvery: 4,
     autoStart: false,
@@ -120,16 +119,33 @@ function defaultState() {
   }
 }
 
+const state = loadState()
+let selectedTaskId = state.selectedTaskId || null
+let timer = {
+  mode: 'focus',
+  running: false,
+  interval: null,
+  remaining: state.durations.focus,
+  total: state.durations.focus,
+  startedAt: null
+}
+
 function loadState() {
   const fallback = defaultState()
   try {
     const savedRaw = localStorage.getItem(STORAGE_KEY) || OLD_STORAGE_KEYS.map(key => localStorage.getItem(key)).find(Boolean)
     if (!savedRaw) return fallback
+
     const saved = JSON.parse(savedRaw)
     const merged = { ...fallback, ...saved }
+    const rawTasks = Array.isArray(saved.tasks) ? saved.tasks : Array.isArray(saved.todos) ? saved.todos : []
+
     merged.theme = themes.includes(merged.theme) ? merged.theme : fallback.theme
     merged.links = withDefaultLinks(sanitizeLinks(Array.isArray(merged.links) ? merged.links : fallback.links))
-    merged.todos = sanitizeTodos(Array.isArray(merged.todos) ? merged.todos : [])
+    merged.tasks = sanitizeTasks(rawTasks)
+    merged.selectedTaskId = merged.selectedTaskId || saved.selectedTodoId || null
+    merged.taskFilter = ['open', 'all', 'done'].includes(merged.taskFilter) ? merged.taskFilter : 'open'
+    merged.focusGoal = String(merged.focusGoal || '').slice(0, 90)
     merged.durations = normalizeDurations(saved.durations || fallback.durations)
     merged.longBreakEvery = clampNumber(merged.longBreakEvery, 2, 12, 4)
     merged.autoStart = Boolean(merged.autoStart)
@@ -140,8 +156,11 @@ function loadState() {
     merged.showClockSeconds = Boolean(merged.showClockSeconds)
     merged.showSnow = merged.showSnow !== false
     merged.showLights = merged.showLights !== false
-    merged.focusGoal = String(merged.focusGoal || '').slice(0, 90)
-    merged.selectedTodoId = merged.selectedTodoId || null
+
+    if (!merged.tasks.some(task => task.id === merged.selectedTaskId && !task.done)) {
+      merged.selectedTaskId = null
+    }
+
     return merged
   } catch {
     return fallback
@@ -161,12 +180,10 @@ function normalizeDurations(value) {
 }
 
 function sanitizeLinks(links) {
-  const cleaned = links
+  return links
     .filter(link => link?.name && link?.url)
-    .filter(link => link.name.toLowerCase() !== 'zermelo' && !link.url.toLowerCase().includes('zermelo'))
+    .filter(link => link.name.toLowerCase() !== 'zermelo' && !String(link.url).toLowerCase().includes('zermelo'))
     .map(link => ({ name: String(link.name).slice(0, 24), url: String(link.url) }))
-
-  return cleaned
 }
 
 function withDefaultLinks(links) {
@@ -181,20 +198,30 @@ function withDefaultLinks(links) {
   return next.length ? next : [...defaultLinks]
 }
 
-function sanitizeTodos(todos) {
-  return todos
-    .filter(todo => todo?.text)
-    .map(todo => ({
-      id: todo.id || makeId(),
-      text: String(todo.text).slice(0, 90),
-      done: Boolean(todo.done)
-    }))
+function sanitizeTasks(tasks) {
+  return tasks
+    .filter(task => task?.title || task?.text)
+    .map(task => {
+      const estimate = clampNumber(task.estimate || task.estimateRounds || 1, 1, 12, 1)
+      const rounds = clampNumber(task.rounds || task.sessions || task.completedRounds || 0, 0, 99, 0)
+      const priority = ['high', 'normal', 'low'].includes(task.priority) ? task.priority : 'normal'
+      return {
+        id: task.id || makeId(),
+        title: String(task.title || task.text).slice(0, 90),
+        done: Boolean(task.done),
+        priority,
+        estimate,
+        rounds,
+        createdAt: task.createdAt || Date.now(),
+        completedAt: task.completedAt || null
+      }
+    })
 }
 
 function saveState() {
   state.links = sanitizeLinks(state.links)
-  state.todos = sanitizeTodos(state.todos)
-  state.selectedTodoId = selectedTodoId
+  state.tasks = sanitizeTasks(state.tasks)
+  state.selectedTaskId = selectedTaskId
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
 }
 
@@ -207,8 +234,7 @@ function clampNumber(value, min, max, fallback) {
 function secondsFromInputs(minInput, secInput, fallback) {
   const minutes = clampNumber(minInput.value, 0, 180, Math.floor(fallback / 60))
   const seconds = clampNumber(secInput.value, 0, 59, fallback % 60)
-  const total = Math.round(minutes * 60 + seconds)
-  return Math.max(1, total)
+  return Math.max(1, Math.round(minutes * 60 + seconds))
 }
 
 function setDurationInputs() {
@@ -258,6 +284,7 @@ function updateSessionPill() {
   const count = getSessions()
   els.sessionPill.textContent = `${count} focus session${count === 1 ? '' : 's'}`
   renderRoundDots()
+  updateNextBreakLabel()
 }
 
 function updateClock() {
@@ -286,18 +313,18 @@ function updateCountdown() {
   const days = Math.max(0, Math.ceil((christmasDay - today) / 86400000))
 
   els.countdownDays.textContent = days
-  els.countdownLabel.textContent = days === 1 ? 'day to Christmas' : 'days to Christmas'
+  els.countdownLabel.textContent = days === 1 ? 'sleep left' : 'sleeps left'
 
   const startOfYear = new Date(christmas.getFullYear(), 0, 1)
   const progress = 1 - Math.max(0, christmasDay - now) / Math.max(1, christmasDay - startOfYear)
-  els.countdownFill.style.width = `${Math.min(100, Math.max(4, progress * 100))}%`
+  els.countdownFill.style.width = `${Math.min(100, Math.max(5, progress * 100))}%`
   renderOrnaments(progress)
 }
 
 function renderOrnaments(progress) {
   els.ornamentRow.innerHTML = ''
-  const filled = Math.max(1, Math.round(progress * 10))
-  for (let i = 0; i < 10; i++) {
+  const filled = Math.max(1, Math.round(progress * 12))
+  for (let i = 0; i < 12; i++) {
     const dot = document.createElement('span')
     dot.className = i < filled ? 'ornament-dot lit' : 'ornament-dot'
     els.ornamentRow.append(dot)
@@ -351,24 +378,10 @@ function setMode(mode, keepRunning = false) {
 
   els.modeTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.mode === mode))
   els.timerModeTitle.textContent = modeTitle(mode)
-  updateQuestText()
+  renderCurrentTask()
   renderTimer()
 
   if (keepRunning) startTimer()
-}
-
-function updateQuestText() {
-  const goal = state.focusGoal.trim()
-  if (timer.mode === 'focus') {
-    els.questText.textContent = goal || 'No sprint selected.'
-    els.timerSubtitle.textContent = goal ? 'Ready to start' : 'Pick one task'
-  } else if (timer.mode === 'short') {
-    els.questText.textContent = 'Short break. Stand up or rest your eyes.'
-    els.timerSubtitle.textContent = 'Break'
-  } else {
-    els.questText.textContent = 'Long break. Reset before the next sprint.'
-    els.timerSubtitle.textContent = 'Long break'
-  }
 }
 
 function formatTime(totalSeconds) {
@@ -380,17 +393,15 @@ function formatTime(totalSeconds) {
 
 function renderTimer() {
   els.timerDisplay.textContent = formatTime(timer.remaining)
-  els.startPause.textContent = timer.running
-    ? 'Pause'
-    : timer.mode === 'focus'
-      ? 'Start focus'
-      : 'Start break'
+  els.startPause.textContent = timer.running ? 'Pause' : timer.mode === 'focus' ? 'Start focus' : 'Start break'
+  els.finishEarly.textContent = timer.mode === 'focus' ? 'Finish focus' : 'End break'
 
   const progress = timer.total === 0 ? 0 : 1 - timer.remaining / timer.total
   const circumference = 2 * Math.PI * 98
   els.timerProgress.style.strokeDasharray = `${circumference}`
   els.timerProgress.style.strokeDashoffset = `${circumference * (1 - progress)}`
 
+  els.timerSubtitle.textContent = timer.running ? 'Running' : timer.mode === 'focus' ? 'Ready to focus' : 'Ready for break'
   document.body.classList.toggle('focus-running', timer.running && timer.mode === 'focus')
   updateTimerEnd()
   document.title = timer.running ? `${formatTime(timer.remaining)} · SnowTab` : 'SnowTab'
@@ -398,7 +409,7 @@ function renderTimer() {
 
 function updateTimerEnd() {
   if (!timer.running) {
-    els.timerEnd.textContent = 'End time appears after start'
+    els.timerEnd.textContent = 'Not running'
     return
   }
   const end = new Date(Date.now() + timer.remaining * 1000)
@@ -430,13 +441,13 @@ function tick() {
   if (timer.remaining <= 0) {
     timer.remaining = 0
     renderTimer()
-    finishTimer()
+    finishTimer(false)
     return
   }
   renderTimer()
 }
 
-function finishTimer() {
+function finishTimer(manual) {
   clearInterval(timer.interval)
   timer.running = false
   timer.startedAt = null
@@ -444,12 +455,10 @@ function finishTimer() {
   sendNotification()
 
   if (timer.mode === 'focus') {
-    addSession()
-    updateSessionPill()
-    if (state.completeTaskOnFocusEnd) markSelectedTodoDone(false)
-    showToast('Focus session finished')
+    completeFocusRound()
+    showToast(manual ? 'Focus logged' : 'Focus finished')
   } else {
-    showToast('Break finished')
+    showToast(manual ? 'Break ended' : 'Break finished')
   }
 
   const nextMode = nextTimerMode()
@@ -457,10 +466,29 @@ function finishTimer() {
   else renderTimer()
 }
 
+function completeFocusRound() {
+  addSession()
+
+  const task = getSelectedTask()
+  if (task && !task.done) {
+    task.rounds = Math.min(99, task.rounds + 1)
+    if (state.completeTaskOnFocusEnd && task.rounds >= task.estimate) {
+      task.done = true
+      task.completedAt = Date.now()
+      selectedTaskId = null
+    }
+  }
+
+  saveState()
+  updateSessionPill()
+  renderTasks()
+  renderCurrentTask()
+}
+
 function nextTimerMode() {
   if (timer.mode !== 'focus') return 'focus'
-  const sessions = getSessions()
-  return sessions > 0 && sessions % state.longBreakEvery === 0 ? 'long' : 'short'
+  const nextSessionCount = getSessions()
+  return nextSessionCount > 0 && nextSessionCount % state.longBreakEvery === 0 ? 'long' : 'short'
 }
 
 function resetTimer() {
@@ -470,11 +498,6 @@ function resetTimer() {
   timer.total = state.durations[timer.mode]
   timer.startedAt = null
   renderTimer()
-}
-
-function skipMode() {
-  const next = timer.mode === 'focus' ? nextTimerMode() : 'focus'
-  setMode(next, false)
 }
 
 function adjustTimer(seconds) {
@@ -527,14 +550,48 @@ function updateSettingsFromInputs() {
   updateClock()
   resetTimerToModeDuration()
   renderRoundDots()
+  updateNextBreakLabel()
 }
 
 function updateFocusGoal() {
   state.focusGoal = els.focusGoal.value.trim()
-  selectedTodoId = null
+  selectedTaskId = null
   saveState()
-  renderTodos()
-  updateQuestText()
+  renderTasks()
+  renderCurrentTask()
+}
+
+function getSelectedTask() {
+  return state.tasks.find(task => task.id === selectedTaskId) || null
+}
+
+function renderCurrentTask() {
+  const task = getSelectedTask()
+  if (timer.mode !== 'focus') {
+    els.currentTaskTitle.textContent = timer.mode === 'short' ? 'Short break' : 'Long break'
+    els.currentTaskMeta.textContent = timer.mode === 'short' ? 'Step away for a few minutes.' : 'Take a proper reset before the next sprint.'
+    return
+  }
+
+  if (task && !task.done) {
+    els.currentTaskTitle.textContent = task.title
+    els.currentTaskMeta.textContent = `${priorityLabels[task.priority]} priority · ${task.rounds}/${task.estimate} sprint${task.estimate === 1 ? '' : 's'}`
+    return
+  }
+
+  const customGoal = state.focusGoal.trim()
+  els.currentTaskTitle.textContent = customGoal || 'No task selected'
+  els.currentTaskMeta.textContent = customGoal ? 'Custom sprint, not tied to the task list.' : 'Pick one from your task list or type a custom sprint.'
+}
+
+function updateNextBreakLabel() {
+  const sessions = getSessions()
+  const untilLong = state.longBreakEvery - (sessions % state.longBreakEvery)
+  if (untilLong === state.longBreakEvery) {
+    els.nextBreakLabel.textContent = 'Long break comes after this focus.'
+  } else {
+    els.nextBreakLabel.textContent = `${untilLong} focus sprint${untilLong === 1 ? '' : 's'} until long break.`
+  }
 }
 
 function playChime() {
@@ -578,131 +635,228 @@ function renderRoundDots() {
   }
 }
 
-function addTodo(event) {
+function addTask(event) {
   event.preventDefault()
-  const text = els.todoInput.value.trim()
-  if (!text) return
+  const title = els.todoInput.value.trim()
+  if (!title) return
 
-  state.todos.unshift({ id: makeId(), text, done: false })
+  state.tasks.unshift({
+    id: makeId(),
+    title,
+    done: false,
+    priority: els.todoPriority.value,
+    estimate: clampNumber(els.todoEstimate.value, 1, 12, 1),
+    rounds: 0,
+    createdAt: Date.now(),
+    completedAt: null
+  })
+
   els.todoInput.value = ''
+  els.todoPriority.value = 'normal'
+  els.todoEstimate.value = '1'
   saveState()
-  renderTodos()
+  renderTasks()
   showToast('Task added')
 }
 
-function renderTodos() {
+function renderTasks() {
   els.todoList.innerHTML = ''
-  const openTodos = state.todos.filter(todo => !todo.done).length
-  els.todoCount.textContent = `${openTodos} left`
+  state.tasks = sanitizeTasks(state.tasks)
 
-  if (state.todos.length === 0) {
+  const total = state.tasks.length
+  const done = state.tasks.filter(task => task.done).length
+  const open = total - done
+  const progress = total ? Math.round((done / total) * 100) : 0
+
+  els.todoCount.textContent = `${open} open`
+  els.taskProgressText.textContent = total ? `${done}/${total} done` : 'No tasks yet'
+  els.taskProgressFill.style.width = `${progress}%`
+  els.filterButtons.forEach(button => button.classList.toggle('active', button.dataset.filter === state.taskFilter))
+
+  const visible = state.tasks.filter(task => {
+    if (state.taskFilter === 'done') return task.done
+    if (state.taskFilter === 'open') return !task.done
+    return true
+  })
+
+  if (visible.length === 0) {
     const empty = document.createElement('p')
     empty.className = 'empty-state'
-    empty.textContent = 'No tasks yet.'
+    empty.textContent = state.taskFilter === 'done' ? 'No finished tasks yet.' : state.taskFilter === 'all' ? 'No tasks yet.' : 'No open tasks.'
     els.todoList.append(empty)
-    els.markCurrentDone.disabled = true
     return
   }
 
-  state.todos.forEach(todo => {
+  visible.forEach(task => {
     const item = document.createElement('article')
-    item.className = `todo-item${todo.done ? ' done' : ''}${todo.id === selectedTodoId ? ' selected' : ''}`
+    const goalReached = task.rounds >= task.estimate && !task.done
+    item.className = [
+      'todo-item',
+      task.done ? 'done' : '',
+      task.id === selectedTaskId ? 'selected' : '',
+      goalReached ? 'goal-reached' : ''
+    ].filter(Boolean).join(' ')
 
     const check = document.createElement('button')
     check.type = 'button'
     check.className = 'todo-check'
-    check.setAttribute('aria-label', todo.done ? 'Mark task open' : 'Mark task done')
-    check.addEventListener('click', () => toggleTodo(todo.id))
+    check.setAttribute('aria-label', task.done ? 'Mark task open' : 'Mark task done')
+    check.addEventListener('click', () => toggleTask(task.id))
 
-    const text = document.createElement('span')
-    text.textContent = todo.text
+    const body = document.createElement('div')
+    body.className = 'todo-body'
+    const title = document.createElement('strong')
+    title.textContent = task.title
+    const meta = document.createElement('div')
+    meta.className = 'todo-meta'
 
-    const use = document.createElement('button')
-    use.type = 'button'
-    use.className = 'task-action'
-    use.textContent = todo.id === selectedTodoId ? 'Selected' : 'Sprint'
-    use.disabled = todo.done
-    use.addEventListener('click', () => useTodoAsGoal(todo.id))
+    const priority = document.createElement('span')
+    priority.className = `priority-tag priority-${task.priority}`
+    priority.textContent = priorityLabels[task.priority]
 
-    const remove = document.createElement('button')
-    remove.type = 'button'
-    remove.className = 'task-action remove-task'
-    remove.textContent = 'Remove'
-    remove.addEventListener('click', () => removeTodo(todo.id))
+    const rounds = document.createElement('span')
+    rounds.textContent = `${task.rounds}/${task.estimate} sprint${task.estimate === 1 ? '' : 's'}`
 
-    item.append(check, text, use, remove)
+    const selected = document.createElement('span')
+    selected.textContent = task.id === selectedTaskId ? 'Selected' : ''
+    if (!selected.textContent) selected.hidden = true
+
+    meta.append(priority, rounds, selected)
+    body.append(title, meta)
+
+    const actions = document.createElement('div')
+    actions.className = 'task-actions'
+
+    const focus = makeTaskButton(task.id === selectedTaskId ? 'Selected' : 'Focus', () => selectTask(task.id), task.done)
+    const plus = makeTaskButton('+1', () => addRoundToTask(task.id), task.done)
+    const edit = makeTaskButton('Edit', () => editTask(task.id), false)
+    const up = makeTaskButton('Up', () => moveTask(task.id, -1), false)
+    const down = makeTaskButton('Down', () => moveTask(task.id, 1), false)
+    const remove = makeTaskButton('Delete', () => removeTask(task.id), false, 'danger-text')
+
+    actions.append(focus, plus, edit, up, down, remove)
+    item.append(check, body, actions)
     els.todoList.append(item)
   })
-
-  els.markCurrentDone.disabled = !selectedTodoId
 }
 
-function toggleTodo(id) {
-  const todo = state.todos.find(item => item.id === id)
-  if (!todo) return
+function makeTaskButton(label, handler, disabled, extraClass = '') {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = `task-action ${extraClass}`.trim()
+  button.textContent = label
+  button.disabled = disabled
+  button.addEventListener('click', handler)
+  return button
+}
 
-  todo.done = !todo.done
-  if (todo.done && selectedTodoId === id) {
-    selectedTodoId = null
-    state.focusGoal = ''
-    els.focusGoal.value = ''
-  }
+function toggleTask(id) {
+  const task = state.tasks.find(item => item.id === id)
+  if (!task) return
+
+  task.done = !task.done
+  task.completedAt = task.done ? Date.now() : null
+  if (task.done && selectedTaskId === id) selectedTaskId = null
   saveState()
-  renderTodos()
+  renderTasks()
+  renderCurrentTask()
 }
 
-function useTodoAsGoal(id) {
-  const todo = state.todos.find(item => item.id === id)
-  if (!todo || todo.done) return
+function selectTask(id) {
+  const task = state.tasks.find(item => item.id === id)
+  if (!task || task.done) return
 
-  selectedTodoId = todo.id
-  state.focusGoal = todo.text
-  els.focusGoal.value = todo.text
-  saveState()
-  setMode('focus')
-  renderTodos()
-  updateQuestText()
-  showToast('Sprint selected')
-}
-
-function markSelectedTodoDone(showMessage = true) {
-  if (!selectedTodoId) return
-  const todo = state.todos.find(item => item.id === selectedTodoId)
-  if (!todo) return
-  todo.done = true
-  selectedTodoId = null
+  selectedTaskId = task.id
   state.focusGoal = ''
   els.focusGoal.value = ''
   saveState()
-  renderTodos()
-  updateQuestText()
-  if (showMessage) showToast('Task marked done')
+  setMode('focus')
+  renderTasks()
+  renderCurrentTask()
+  showToast('Task selected')
 }
 
-function removeTodo(id) {
-  state.todos = state.todos.filter(item => item.id !== id)
-  if (selectedTodoId === id) selectedTodoId = null
+function addRoundToTask(id) {
+  const task = state.tasks.find(item => item.id === id)
+  if (!task || task.done) return
+  task.rounds = Math.min(99, task.rounds + 1)
   saveState()
-  renderTodos()
-  updateQuestText()
+  renderTasks()
+  renderCurrentTask()
 }
 
-function clearDoneTodos() {
-  state.todos = state.todos.filter(todo => !todo.done)
+function editTask(id) {
+  const task = state.tasks.find(item => item.id === id)
+  if (!task) return
+  const nextTitle = window.prompt('Edit task', task.title)
+  if (nextTitle === null) return
+  const clean = nextTitle.trim().slice(0, 90)
+  if (!clean) return
+  task.title = clean
   saveState()
-  renderTodos()
+  renderTasks()
+  renderCurrentTask()
+}
+
+function moveTask(id, direction) {
+  const index = state.tasks.findIndex(item => item.id === id)
+  const nextIndex = index + direction
+  if (index < 0 || nextIndex < 0 || nextIndex >= state.tasks.length) return
+  const [task] = state.tasks.splice(index, 1)
+  state.tasks.splice(nextIndex, 0, task)
+  saveState()
+  renderTasks()
+}
+
+function removeTask(id) {
+  state.tasks = state.tasks.filter(item => item.id !== id)
+  if (selectedTaskId === id) selectedTaskId = null
+  saveState()
+  renderTasks()
+  renderCurrentTask()
+}
+
+function pickNextTask() {
+  const openTasks = state.tasks.filter(task => !task.done)
+  if (openTasks.length === 0) {
+    showToast('No open tasks')
+    return
+  }
+
+  const best = [...openTasks].sort((a, b) => {
+    const priorityDiff = priorityRank[b.priority] - priorityRank[a.priority]
+    if (priorityDiff) return priorityDiff
+    return a.createdAt - b.createdAt
+  })[0]
+
+  selectTask(best.id)
+}
+
+function clearDoneTasks() {
+  state.tasks = state.tasks.filter(task => !task.done)
+  saveState()
+  renderTasks()
+  renderCurrentTask()
   showToast('Done tasks cleared')
 }
 
-function resetTodoList() {
-  state.todos = []
-  selectedTodoId = null
+function resetTaskList() {
+  if (state.tasks.length && !window.confirm('Reset the whole task list?')) return
+  state.tasks = []
+  selectedTaskId = null
   state.focusGoal = ''
   els.focusGoal.value = ''
   saveState()
-  renderTodos()
-  updateQuestText()
-  showToast('List reset')
+  renderTasks()
+  renderCurrentTask()
+  showToast('Task list reset')
+}
+
+function setTaskFilter(filter) {
+  if (!['open', 'all', 'done'].includes(filter)) return
+  state.taskFilter = filter
+  saveState()
+  renderTasks()
 }
 
 function renderLinks() {
@@ -815,10 +969,10 @@ function closeSettings() {
 
 function resetAllSettings() {
   const keepLinks = state.links
-  const keepTodos = state.todos
+  const keepTasks = state.tasks
   const fresh = defaultState()
-  Object.assign(state, fresh, { links: keepLinks, todos: keepTodos })
-  selectedTodoId = null
+  Object.assign(state, fresh, { links: keepLinks, tasks: keepTasks })
+  selectedTaskId = null
   setTheme(state.theme)
   setDurationInputs()
   applyPageToggles()
@@ -826,6 +980,7 @@ function resetAllSettings() {
   resetTimerToModeDuration()
   updateClock()
   renderRoundDots()
+  renderCurrentTask()
   showToast('Settings reset')
 }
 
@@ -833,7 +988,7 @@ function showToast(message) {
   els.toast.textContent = message
   els.toast.classList.add('show')
   clearTimeout(showToast.timeout)
-  showToast.timeout = setTimeout(() => els.toast.classList.remove('show'), 2600)
+  showToast.timeout = setTimeout(() => els.toast.classList.remove('show'), 2200)
 }
 
 function initSnow() {
@@ -850,15 +1005,15 @@ function initSnow() {
     canvas.style.height = `${window.innerHeight}px`
 
     flakes.length = 0
-    const amount = Math.min(130, Math.floor(window.innerWidth / 9))
+    const amount = Math.min(140, Math.floor(window.innerWidth / 8))
     for (let i = 0; i < amount; i++) {
       flakes.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        r: (Math.random() * 2.4 + 0.6) * window.devicePixelRatio,
+        r: (Math.random() * 2.3 + 0.7) * window.devicePixelRatio,
         speed: (Math.random() * 0.7 + 0.25) * window.devicePixelRatio,
         drift: (Math.random() * 0.8 - 0.4) * window.devicePixelRatio,
-        opacity: Math.random() * 0.48 + 0.2
+        opacity: Math.random() * 0.46 + 0.2
       })
     }
   }
@@ -895,14 +1050,14 @@ function bindEvents() {
   els.searchForm.addEventListener('submit', handleSearch)
   els.startPause.addEventListener('click', toggleTimer)
   els.resetTimer.addEventListener('click', resetTimer)
-  els.skipMode.addEventListener('click', skipMode)
-  els.markCurrentDone.addEventListener('click', () => markSelectedTodoDone(true))
+  els.finishEarly.addEventListener('click', () => finishTimer(true))
   els.addFive.addEventListener('click', () => adjustTimer(300))
   els.subOne.addEventListener('click', () => adjustTimer(-60))
   els.focusGoal.addEventListener('input', updateFocusGoal)
-  els.todoForm.addEventListener('submit', addTodo)
-  els.clearDone.addEventListener('click', clearDoneTodos)
-  els.resetTodos.addEventListener('click', resetTodoList)
+  els.todoForm.addEventListener('submit', addTask)
+  els.pickNextTask.addEventListener('click', pickNextTask)
+  els.clearDone.addEventListener('click', clearDoneTasks)
+  els.resetTodos.addEventListener('click', resetTaskList)
   els.addLink.addEventListener('click', () => openLinkDialog())
   els.linkForm.addEventListener('submit', saveLink)
   els.closeDialog.addEventListener('click', () => els.linkDialog.close())
@@ -914,6 +1069,7 @@ function bindEvents() {
 
   els.modeTabs.forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.mode)))
   els.presetButtons.forEach(button => button.addEventListener('click', () => applyPreset(button.dataset.preset)))
+  els.filterButtons.forEach(button => button.addEventListener('click', () => setTaskFilter(button.dataset.filter)))
 
   document.querySelectorAll('[data-theme-button]').forEach(button => {
     button.addEventListener('click', () => setTheme(button.dataset.themeButton))
@@ -949,9 +1105,9 @@ function init() {
   updateClock()
   updateCountdown()
   updateSessionPill()
-  renderTodos()
+  renderTasks()
   renderLinks()
-  updateQuestText()
+  renderCurrentTask()
   renderTimer()
   bindEvents()
   initSnow()
