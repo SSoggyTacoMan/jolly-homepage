@@ -26,9 +26,10 @@
           </div>
 
           <div class="theme-picker" aria-label="Theme picker">
-            <button class="theme-dot" data-theme-button="frost" aria-label="Use frost theme"></button>
-            <button class="theme-dot" data-theme-button="cocoa" aria-label="Use cocoa theme"></button>
-            <button class="theme-dot" data-theme-button="aurora" aria-label="Use aurora theme"></button>
+            <button class="theme-choice" data-theme-button="holly" type="button">Holly</button>
+            <button class="theme-choice" data-theme-button="frost" type="button">Frost</button>
+            <button class="theme-choice" data-theme-button="cocoa" type="button">Cocoa</button>
+            <button class="theme-choice" data-theme-button="aurora" type="button">Aurora</button>
           </div>
         </div>
 
@@ -41,18 +42,24 @@
         <div class="hero-grid">
           <article class="mini-panel countdown-panel">
             <span class="panel-label">Christmas countdown</span>
-            <strong id="countdown-days">...</strong>
-            <span id="countdown-label">days left</span>
+            <div class="countdown-row">
+              <strong id="countdown-days">...</strong>
+              <span id="countdown-label">sleeps until Christmas</span>
+            </div>
+            <div class="countdown-track" aria-hidden="true"><span id="countdown-fill"></span></div>
+            <p id="countdown-mood" class="countdown-mood">Sleigh loading</p>
           </article>
 
           <article class="mini-panel festive-panel">
             <div>
-              <span class="panel-label">Festive mode</span>
-              <p>Lights on. Timer ready. Pick one task and start a clean sprint.</p>
+              <span class="panel-label">Christmas desk</span>
+              <p>Lights, presents, countdown, quick links, todo, and a study timer in one tab.</p>
             </div>
             <div class="present-stack" aria-hidden="true">
+              <span class="tree-shape"></span>
               <span class="present present-one"></span>
               <span class="present present-two"></span>
+              <span class="candy-cane"></span>
               <span class="ornament"></span>
             </div>
           </article>
@@ -71,7 +78,7 @@
 
           <label class="focus-goal-label" for="focus-goal">
             Current sprint goal
-            <input id="focus-goal" maxlength="80" placeholder="Example: finish maths exercises 4 to 8">
+            <input id="focus-goal" maxlength="80" placeholder="What are you studying?">
           </label>
 
           <div class="timer-ring" aria-live="polite">
@@ -81,14 +88,15 @@
             </svg>
             <div class="timer-readout">
               <span id="timer-display">25:00</span>
-              <small id="timer-subtitle">Ready when you are</small>
+              <small id="timer-subtitle">Ready</small>
+              <small id="timer-end" class="timer-end">End time appears after start</small>
             </div>
           </div>
 
           <div class="study-strip">
             <div>
               <span class="strip-label">Study quest</span>
-              <strong id="quest-text">Pick a task, start the timer, then do only that.</strong>
+              <strong id="quest-text">Choose a task or type a sprint goal.</strong>
             </div>
             <div class="round-dots" id="round-dots" aria-label="Rounds until long break"></div>
           </div>
@@ -96,7 +104,9 @@
           <div class="timer-controls">
             <button id="start-pause" class="primary-button">Start focus</button>
             <button id="reset-timer" class="soft-button">Reset</button>
-            <button id="skip-mode" class="soft-button">Skip</button>
+            <button id="skip-mode" class="soft-button">Skip mode</button>
+            <button id="add-five" class="soft-button">+5 min</button>
+            <button id="sub-one" class="soft-button">-1 min</button>
           </div>
 
           <div class="mode-tabs" role="tablist" aria-label="Timer modes">
@@ -107,6 +117,11 @@
 
           <details class="settings-box">
             <summary>Timer settings</summary>
+            <div class="preset-row" aria-label="Timer presets">
+              <button type="button" data-preset="classic">25 / 5</button>
+              <button type="button" data-preset="deep">50 / 10</button>
+              <button type="button" data-preset="quick">15 / 5</button>
+            </div>
             <div class="settings-grid">
               <label>
                 Focus minutes
