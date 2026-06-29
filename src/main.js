@@ -271,7 +271,8 @@ function renderSettings() {
   $("#snow-toggle").checked = state.settings.snow;
   $("#lights-toggle").checked = state.settings.lights;
   $("#search-engine").value = state.settings.searchEngine;
-  $("#engine-pill").textContent = searchEngines[state.settings.searchEngine]?.label || "Google";
+  const engineName = searchEngines[state.settings.searchEngine]?.label || "Google";
+  $("#search-input").placeholder = `Search with ${engineName} or paste a URL`;
   $("#focus-minutes").value = state.settings.focusMinutes;
   $("#break-minutes").value = state.settings.breakMinutes;
   $("#custom-wallpaper-url").value = state.settings.customWallpaper;
