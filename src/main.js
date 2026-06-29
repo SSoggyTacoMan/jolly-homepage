@@ -1,37 +1,32 @@
-const STORAGE_KEY = 'snowtab-state-v3'
-const OLD_STORAGE_KEYS = ['snowtab-state-v2', 'snowtab-state-v1']
-const SESSION_KEY = 'snowtab-sessions-v1'
+const STORAGE_KEY = 'snowtab-state-v4'
+const OLD_STORAGE_KEYS = ['snowtab-state-v3', 'snowtab-state-v2', 'snowtab-state-v1']
+const SESSION_KEY = 'snowtab-sessions-v2'
 
 const defaultLinks = [
   { name: 'GitHub', url: 'https://github.com' },
   { name: 'Hack Club', url: 'https://hackclub.com' },
+  { name: 'Google', url: 'https://google.com' },
   { name: 'YouTube', url: 'https://youtube.com' },
-  { name: 'MDN Docs', url: 'https://developer.mozilla.org' },
-  { name: 'Google Drive', url: 'https://drive.google.com' }
-]
-
-const defaultTodos = []
-
-const breakSteps = [
-  'Stand up',
-  'Drink water',
-  'Rest your eyes',
-  'Reset your desk'
+  { name: 'Drive', url: 'https://drive.google.com' }
 ]
 
 const presets = {
-  classic: { focus: 25, short: 5, long: 15 },
-  deep: { focus: 50, short: 10, long: 25 },
-  quick: { focus: 15, short: 5, long: 15 }
+  classic: { focus: 25 * 60, short: 5 * 60, long: 15 * 60 },
+  deep: { focus: 50 * 60, short: 10 * 60, long: 25 * 60 },
+  quick: { focus: 15 * 60, short: 5 * 60, long: 10 * 60 }
 }
 
+const themes = ['holly', 'candy', 'cocoa', 'frost']
+
 const state = loadState()
+let selectedTodoId = state.selectedTodoId || null
 let timer = {
   mode: 'focus',
   running: false,
   interval: null,
-  remaining: state.durations.focus * 60,
-  total: state.durations.focus * 60
+  remaining: state.durations.focus,
+  total: state.durations.focus,
+  startedAt: null
 }
 
 const els = {
@@ -39,8 +34,8 @@ const els = {
   dateLine: document.querySelector('#date-line'),
   countdownDays: document.querySelector('#countdown-days'),
   countdownLabel: document.querySelector('#countdown-label'),
-  countdownMood: document.querySelector('#countdown-mood'),
   countdownFill: document.querySelector('#countdown-fill'),
+  ornamentRow: document.querySelector('#ornament-row'),
   searchForm: document.querySelector('#search-form'),
   searchInput: document.querySelector('#search-input'),
   timerModeTitle: document.querySelector('#timer-mode-title'),
@@ -51,19 +46,15 @@ const els = {
   startPause: document.querySelector('#start-pause'),
   resetTimer: document.querySelector('#reset-timer'),
   skipMode: document.querySelector('#skip-mode'),
+  markCurrentDone: document.querySelector('#mark-current-done'),
   addFive: document.querySelector('#add-five'),
   subOne: document.querySelector('#sub-one'),
   modeTabs: document.querySelectorAll('.mode-tab'),
+  presetButtons: document.querySelectorAll('[data-preset]'),
   focusGoal: document.querySelector('#focus-goal'),
   questText: document.querySelector('#quest-text'),
   roundDots: document.querySelector('#round-dots'),
-  focusMinutes: document.querySelector('#focus-minutes'),
-  shortMinutes: document.querySelector('#short-minutes'),
-  longMinutes: document.querySelector('#long-minutes'),
-  soundToggle: document.querySelector('#sound-toggle'),
-  autoSwitchToggle: document.querySelector('#auto-switch-toggle'),
   sessionPill: document.querySelector('#session-pill'),
-  presetButtons: document.querySelectorAll('[data-preset]'),
   todoForm: document.querySelector('#todo-form'),
   todoInput: document.querySelector('#todo-input'),
   todoList: document.querySelector('#todo-list'),
@@ -80,6 +71,27 @@ const els = {
   linkName: document.querySelector('#link-name'),
   linkUrl: document.querySelector('#link-url'),
   deleteLink: document.querySelector('#delete-link'),
+  settingsDialog: document.querySelector('#settings-dialog'),
+  settingsOpen: document.querySelector('#settings-open'),
+  settingsClose: document.querySelector('#settings-close'),
+  settingsSave: document.querySelector('#settings-save'),
+  resetSettings: document.querySelector('#reset-settings'),
+  focusMinutes: document.querySelector('#focus-minutes'),
+  focusSeconds: document.querySelector('#focus-seconds'),
+  shortMinutes: document.querySelector('#short-minutes'),
+  shortSeconds: document.querySelector('#short-seconds'),
+  longMinutes: document.querySelector('#long-minutes'),
+  longSeconds: document.querySelector('#long-seconds'),
+  longBreakEvery: document.querySelector('#long-break-every'),
+  autoStartToggle: document.querySelector('#auto-start-toggle'),
+  autoSwitchToggle: document.querySelector('#auto-switch-toggle'),
+  completeTaskToggle: document.querySelector('#complete-task-toggle'),
+  soundToggle: document.querySelector('#sound-toggle'),
+  notifyToggle: document.querySelector('#notify-toggle'),
+  clockSecondsToggle: document.querySelector('#clock-seconds-toggle'),
+  snowToggle: document.querySelector('#snow-toggle'),
+  lightsToggle: document.querySelector('#lights-toggle'),
+  lightString: document.querySelector('#light-string'),
   toast: document.querySelector('#toast')
 }
 
@@ -88,48 +100,85 @@ function makeId() {
   return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function loadState() {
-  const fallback = {
+function defaultState() {
+  return {
     theme: 'holly',
-    links: defaultLinks,
-    todos: defaultTodos,
-    durations: { focus: 25, short: 5, long: 15 },
-    sound: true,
+    links: [...defaultLinks],
+    todos: [],
+    focusGoal: '',
+    selectedTodoId: null,
+    durations: { focus: 25 * 60, short: 5 * 60, long: 15 * 60 },
+    longBreakEvery: 4,
+    autoStart: false,
     autoSwitch: true,
-    focusGoal: ''
+    completeTaskOnFocusEnd: false,
+    sound: true,
+    notify: false,
+    showClockSeconds: false,
+    showSnow: true,
+    showLights: true
   }
+}
 
+function loadState() {
+  const fallback = defaultState()
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || OLD_STORAGE_KEYS.map(key => localStorage.getItem(key)).find(Boolean) || 'null')
-    const merged = {
-      ...fallback,
-      ...saved,
-      durations: { ...fallback.durations, ...saved?.durations }
-    }
-
-    merged.theme = ['holly', 'frost', 'cocoa', 'aurora'].includes(merged.theme) ? merged.theme : 'holly'
-    merged.links = sanitizeLinks(Array.isArray(merged.links) ? merged.links : defaultLinks)
-    merged.todos = sanitizeTodos(Array.isArray(merged.todos) ? merged.todos : defaultTodos)
+    const savedRaw = localStorage.getItem(STORAGE_KEY) || OLD_STORAGE_KEYS.map(key => localStorage.getItem(key)).find(Boolean)
+    if (!savedRaw) return fallback
+    const saved = JSON.parse(savedRaw)
+    const merged = { ...fallback, ...saved }
+    merged.theme = themes.includes(merged.theme) ? merged.theme : fallback.theme
+    merged.links = withDefaultLinks(sanitizeLinks(Array.isArray(merged.links) ? merged.links : fallback.links))
+    merged.todos = sanitizeTodos(Array.isArray(merged.todos) ? merged.todos : [])
+    merged.durations = normalizeDurations(saved.durations || fallback.durations)
+    merged.longBreakEvery = clampNumber(merged.longBreakEvery, 2, 12, 4)
+    merged.autoStart = Boolean(merged.autoStart)
+    merged.autoSwitch = merged.autoSwitch !== false
+    merged.completeTaskOnFocusEnd = Boolean(merged.completeTaskOnFocusEnd)
+    merged.sound = merged.sound !== false
+    merged.notify = Boolean(merged.notify)
+    merged.showClockSeconds = Boolean(merged.showClockSeconds)
+    merged.showSnow = merged.showSnow !== false
+    merged.showLights = merged.showLights !== false
+    merged.focusGoal = String(merged.focusGoal || '').slice(0, 90)
+    merged.selectedTodoId = merged.selectedTodoId || null
     return merged
   } catch {
     return fallback
   }
 }
 
+function normalizeDurations(value) {
+  const fallback = defaultState().durations
+  const result = { ...fallback }
+  ;['focus', 'short', 'long'].forEach(mode => {
+    const raw = Number(value?.[mode])
+    if (Number.isFinite(raw) && raw > 0) {
+      result[mode] = raw <= 180 ? Math.round(raw * 60) : Math.round(raw)
+    }
+  })
+  return result
+}
+
 function sanitizeLinks(links) {
   const cleaned = links
     .filter(link => link?.name && link?.url)
     .filter(link => link.name.toLowerCase() !== 'zermelo' && !link.url.toLowerCase().includes('zermelo'))
+    .map(link => ({ name: String(link.name).slice(0, 24), url: String(link.url) }))
 
-  const names = new Set(cleaned.map(link => link.name.toLowerCase()))
+  return cleaned
+}
+
+function withDefaultLinks(links) {
+  const next = [...links]
+  const names = new Set(next.map(link => link.name.toLowerCase()))
   defaultLinks.forEach(link => {
-    if (cleaned.length < 5 && !names.has(link.name.toLowerCase())) {
-      cleaned.push(link)
+    if (next.length < 5 && !names.has(link.name.toLowerCase())) {
+      next.push({ ...link })
       names.add(link.name.toLowerCase())
     }
   })
-
-  return cleaned.length ? cleaned : [...defaultLinks]
+  return next.length ? next : [...defaultLinks]
 }
 
 function sanitizeTodos(todos) {
@@ -143,7 +192,43 @@ function sanitizeTodos(todos) {
 }
 
 function saveState() {
+  state.links = sanitizeLinks(state.links)
+  state.todos = sanitizeTodos(state.todos)
+  state.selectedTodoId = selectedTodoId
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+}
+
+function clampNumber(value, min, max, fallback) {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return fallback
+  return Math.min(max, Math.max(min, number))
+}
+
+function secondsFromInputs(minInput, secInput, fallback) {
+  const minutes = clampNumber(minInput.value, 0, 180, Math.floor(fallback / 60))
+  const seconds = clampNumber(secInput.value, 0, 59, fallback % 60)
+  const total = Math.round(minutes * 60 + seconds)
+  return Math.max(1, total)
+}
+
+function setDurationInputs() {
+  setMinuteSecondInputs(els.focusMinutes, els.focusSeconds, state.durations.focus)
+  setMinuteSecondInputs(els.shortMinutes, els.shortSeconds, state.durations.short)
+  setMinuteSecondInputs(els.longMinutes, els.longSeconds, state.durations.long)
+  els.longBreakEvery.value = state.longBreakEvery
+  els.autoStartToggle.checked = state.autoStart
+  els.autoSwitchToggle.checked = state.autoSwitch
+  els.completeTaskToggle.checked = state.completeTaskOnFocusEnd
+  els.soundToggle.checked = state.sound
+  els.notifyToggle.checked = state.notify
+  els.clockSecondsToggle.checked = state.showClockSeconds
+  els.snowToggle.checked = state.showSnow
+  els.lightsToggle.checked = state.showLights
+}
+
+function setMinuteSecondInputs(minInput, secInput, total) {
+  minInput.value = Math.floor(total / 60)
+  secInput.value = total % 60
 }
 
 function todayKey() {
@@ -177,7 +262,11 @@ function updateSessionPill() {
 
 function updateClock() {
   const now = new Date()
-  els.clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  els.clock.textContent = now.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: state.showClockSeconds ? '2-digit' : undefined
+  })
   els.dateLine.textContent = now.toLocaleDateString([], {
     weekday: 'long',
     month: 'long',
@@ -190,19 +279,29 @@ function updateCountdown() {
   let christmas = new Date(now.getFullYear(), 11, 25)
   if (now > christmas) christmas = new Date(now.getFullYear() + 1, 11, 25)
 
-  const diff = christmas.setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)
-  const days = Math.max(0, Math.ceil(diff / 86400000))
+  const today = new Date(now)
+  today.setHours(0, 0, 0, 0)
+  const christmasDay = new Date(christmas)
+  christmasDay.setHours(0, 0, 0, 0)
+  const days = Math.max(0, Math.ceil((christmasDay - today) / 86400000))
+
   els.countdownDays.textContent = days
-  els.countdownLabel.textContent = days === 1 ? 'sleep until Christmas' : 'sleeps until Christmas'
+  els.countdownLabel.textContent = days === 1 ? 'day to Christmas' : 'days to Christmas'
 
   const startOfYear = new Date(christmas.getFullYear(), 0, 1)
-  const yearProgress = 1 - Math.max(0, christmas - now) / Math.max(1, christmas - startOfYear)
-  els.countdownFill.style.width = `${Math.min(100, Math.max(3, yearProgress * 100))}%`
+  const progress = 1 - Math.max(0, christmasDay - now) / Math.max(1, christmasDay - startOfYear)
+  els.countdownFill.style.width = `${Math.min(100, Math.max(4, progress * 100))}%`
+  renderOrnaments(progress)
+}
 
-  if (days === 0) els.countdownMood.textContent = 'Merry Christmas'
-  else if (days <= 7) els.countdownMood.textContent = 'Final week'
-  else if (days <= 31) els.countdownMood.textContent = 'December mode'
-  else els.countdownMood.textContent = 'Sleigh loading'
+function renderOrnaments(progress) {
+  els.ornamentRow.innerHTML = ''
+  const filled = Math.max(1, Math.round(progress * 10))
+  for (let i = 0; i < 10; i++) {
+    const dot = document.createElement('span')
+    dot.className = i < filled ? 'ornament-dot lit' : 'ornament-dot'
+    els.ornamentRow.append(dot)
+  }
 }
 
 function handleSearch(event) {
@@ -219,13 +318,19 @@ function handleSearch(event) {
 }
 
 function setTheme(theme) {
-  if (!['holly', 'frost', 'cocoa', 'aurora'].includes(theme)) theme = 'holly'
+  if (!themes.includes(theme)) theme = 'holly'
   state.theme = theme
   document.documentElement.dataset.theme = theme
   document.querySelectorAll('[data-theme-button]').forEach(button => {
     button.classList.toggle('active', button.dataset.themeButton === theme)
   })
   saveState()
+}
+
+function applyPageToggles() {
+  document.body.classList.toggle('snow-off', !state.showSnow)
+  document.body.classList.toggle('lights-off', !state.showLights)
+  els.lightString.hidden = !state.showLights
 }
 
 function modeTitle(mode) {
@@ -239,9 +344,10 @@ function modeTitle(mode) {
 function setMode(mode, keepRunning = false) {
   clearInterval(timer.interval)
   timer.mode = mode
-  timer.total = state.durations[mode] * 60
+  timer.total = state.durations[mode]
   timer.remaining = timer.total
   timer.running = false
+  timer.startedAt = null
 
   els.modeTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.mode === mode))
   els.timerModeTitle.textContent = modeTitle(mode)
@@ -254,19 +360,26 @@ function setMode(mode, keepRunning = false) {
 function updateQuestText() {
   const goal = state.focusGoal.trim()
   if (timer.mode === 'focus') {
-    els.questText.textContent = goal ? `Current sprint: ${goal}` : 'Choose a task or type a sprint goal.'
-    els.timerSubtitle.textContent = goal ? 'Sprint ready' : 'Ready'
+    els.questText.textContent = goal || 'No sprint selected.'
+    els.timerSubtitle.textContent = goal ? 'Ready to start' : 'Pick one task'
+  } else if (timer.mode === 'short') {
+    els.questText.textContent = 'Short break. Stand up or rest your eyes.'
+    els.timerSubtitle.textContent = 'Break'
   } else {
-    const steps = timer.mode === 'long' ? breakSteps.join(' · ') : breakSteps.slice(0, 2).join(' · ')
-    els.questText.textContent = `Break plan: ${steps}`
-    els.timerSubtitle.textContent = timer.mode === 'long' ? 'Long break' : 'Short break'
+    els.questText.textContent = 'Long break. Reset before the next sprint.'
+    els.timerSubtitle.textContent = 'Long break'
   }
 }
 
+function formatTime(totalSeconds) {
+  const safe = Math.max(0, Math.round(totalSeconds))
+  const minutes = Math.floor(safe / 60).toString().padStart(2, '0')
+  const seconds = (safe % 60).toString().padStart(2, '0')
+  return `${minutes}:${seconds}`
+}
+
 function renderTimer() {
-  const minutes = Math.floor(timer.remaining / 60).toString().padStart(2, '0')
-  const seconds = Math.floor(timer.remaining % 60).toString().padStart(2, '0')
-  els.timerDisplay.textContent = `${minutes}:${seconds}`
+  els.timerDisplay.textContent = formatTime(timer.remaining)
   els.startPause.textContent = timer.running
     ? 'Pause'
     : timer.mode === 'focus'
@@ -274,143 +387,154 @@ function renderTimer() {
       : 'Start break'
 
   const progress = timer.total === 0 ? 0 : 1 - timer.remaining / timer.total
-  const circumference = 2 * Math.PI * 96
+  const circumference = 2 * Math.PI * 98
   els.timerProgress.style.strokeDasharray = `${circumference}`
   els.timerProgress.style.strokeDashoffset = `${circumference * (1 - progress)}`
 
   document.body.classList.toggle('focus-running', timer.running && timer.mode === 'focus')
   updateTimerEnd()
-  document.title = timer.running ? `${minutes}:${seconds} · SnowTab` : 'SnowTab'
+  document.title = timer.running ? `${formatTime(timer.remaining)} · SnowTab` : 'SnowTab'
 }
 
 function updateTimerEnd() {
-  if (!els.timerEnd) return
   if (!timer.running) {
     els.timerEnd.textContent = 'End time appears after start'
     return
   }
-
-  const ends = new Date(Date.now() + timer.remaining * 1000)
-  els.timerEnd.textContent = `Ends at ${ends.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+  const end = new Date(Date.now() + timer.remaining * 1000)
+  els.timerEnd.textContent = `Ends at ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 }
 
 function startTimer() {
   clearInterval(timer.interval)
   timer.running = true
-  els.timerSubtitle.textContent = timer.mode === 'focus' ? 'Focus running' : 'Break running'
-  timer.interval = setInterval(() => {
-    timer.remaining -= 1
-    if (timer.remaining <= 0) completeTimer()
-    renderTimer()
-  }, 1000)
+  timer.startedAt = Date.now()
+  timer.interval = setInterval(tick, 1000)
   renderTimer()
 }
 
 function pauseTimer() {
-  timer.running = false
   clearInterval(timer.interval)
-  els.timerSubtitle.textContent = 'Paused'
+  timer.running = false
+  timer.startedAt = null
   renderTimer()
 }
 
-function completeTimer() {
+function toggleTimer() {
+  if (timer.running) pauseTimer()
+  else startTimer()
+}
+
+function tick() {
+  timer.remaining -= 1
+  if (timer.remaining <= 0) {
+    timer.remaining = 0
+    renderTimer()
+    finishTimer()
+    return
+  }
+  renderTimer()
+}
+
+function finishTimer() {
   clearInterval(timer.interval)
   timer.running = false
-  timer.remaining = 0
-  renderTimer()
+  timer.startedAt = null
+  playChime()
+  sendNotification()
 
   if (timer.mode === 'focus') {
     addSession()
     updateSessionPill()
-    showToast('Sprint complete. Break time.')
-    playChime()
-    markMatchingGoalDone()
-    if (state.autoSwitch) setTimeout(() => setMode(getSessions() % 4 === 0 ? 'long' : 'short'), 450)
+    if (state.completeTaskOnFocusEnd) markSelectedTodoDone(false)
+    showToast('Focus session finished')
   } else {
-    showToast('Break done. Ready for the next sprint.')
-    playChime()
-    if (state.autoSwitch) setTimeout(() => setMode('focus'), 450)
+    showToast('Break finished')
   }
+
+  const nextMode = nextTimerMode()
+  if (state.autoSwitch) setMode(nextMode, state.autoStart)
+  else renderTimer()
 }
 
-function markMatchingGoalDone() {
-  const goal = state.focusGoal.trim().toLowerCase()
-  if (!goal) return
-
-  const todo = state.todos.find(item => !item.done && item.text.trim().toLowerCase() === goal)
-  if (!todo) return
-
-  todo.done = true
-  state.focusGoal = ''
-  els.focusGoal.value = ''
-  saveState()
-  renderTodos()
-  showToast('Task marked done')
-}
-
-function toggleTimer() {
-  timer.running ? pauseTimer() : startTimer()
+function nextTimerMode() {
+  if (timer.mode !== 'focus') return 'focus'
+  const sessions = getSessions()
+  return sessions > 0 && sessions % state.longBreakEvery === 0 ? 'long' : 'short'
 }
 
 function resetTimer() {
   clearInterval(timer.interval)
   timer.running = false
-  timer.remaining = state.durations[timer.mode] * 60
-  timer.total = timer.remaining
-  els.timerSubtitle.textContent = 'Ready'
+  timer.remaining = state.durations[timer.mode]
+  timer.total = state.durations[timer.mode]
+  timer.startedAt = null
   renderTimer()
 }
 
 function skipMode() {
-  const next = timer.mode === 'focus' ? (getSessions() % 4 === 3 ? 'long' : 'short') : 'focus'
-  setMode(next)
+  const next = timer.mode === 'focus' ? nextTimerMode() : 'focus'
+  setMode(next, false)
 }
 
 function adjustTimer(seconds) {
-  if (timer.running && timer.remaining + seconds < 60) return
-  timer.remaining = Math.max(60, timer.remaining + seconds)
-  timer.total = Math.max(timer.remaining, timer.total + seconds)
+  const next = Math.max(1, timer.remaining + seconds)
+  timer.remaining = next
+  if (!timer.running) timer.total = Math.max(timer.total, next)
   renderTimer()
 }
 
 function applyPreset(name) {
   const preset = presets[name]
   if (!preset) return
-
   state.durations = { ...preset }
-  els.focusMinutes.value = preset.focus
-  els.shortMinutes.value = preset.short
-  els.longMinutes.value = preset.long
+  setDurationInputs()
   saveState()
-  if (!timer.running) setMode(timer.mode)
-  showToast(`${preset.focus}/${preset.short} preset applied`)
+  resetTimerToModeDuration()
+  showToast('Preset applied')
 }
 
-function updateDurations() {
-  state.durations.focus = clampNumber(els.focusMinutes.value, 1, 180, 25)
-  state.durations.short = clampNumber(els.shortMinutes.value, 1, 60, 5)
-  state.durations.long = clampNumber(els.longMinutes.value, 1, 90, 15)
-  state.sound = els.soundToggle.checked
-  state.autoSwitch = els.autoSwitchToggle.checked
-  saveState()
+function resetTimerToModeDuration() {
+  timer.total = state.durations[timer.mode]
+  timer.remaining = timer.total
+  renderTimer()
+}
 
-  if (!timer.running) {
-    timer.total = state.durations[timer.mode] * 60
-    timer.remaining = timer.total
-    renderTimer()
+function updateSettingsFromInputs() {
+  state.durations.focus = secondsFromInputs(els.focusMinutes, els.focusSeconds, state.durations.focus)
+  state.durations.short = secondsFromInputs(els.shortMinutes, els.shortSeconds, state.durations.short)
+  state.durations.long = secondsFromInputs(els.longMinutes, els.longSeconds, state.durations.long)
+  state.longBreakEvery = clampNumber(els.longBreakEvery.value, 2, 12, 4)
+  state.autoStart = els.autoStartToggle.checked
+  state.autoSwitch = els.autoSwitchToggle.checked
+  state.completeTaskOnFocusEnd = els.completeTaskToggle.checked
+  state.sound = els.soundToggle.checked
+  state.showClockSeconds = els.clockSecondsToggle.checked
+  state.showSnow = els.snowToggle.checked
+  state.showLights = els.lightsToggle.checked
+  state.notify = els.notifyToggle.checked
+
+  if (state.notify && 'Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      state.notify = permission === 'granted'
+      els.notifyToggle.checked = state.notify
+      saveState()
+    })
   }
+
+  saveState()
+  applyPageToggles()
+  updateClock()
+  resetTimerToModeDuration()
+  renderRoundDots()
 }
 
 function updateFocusGoal() {
   state.focusGoal = els.focusGoal.value.trim()
+  selectedTodoId = null
   saveState()
+  renderTodos()
   updateQuestText()
-}
-
-function clampNumber(value, min, max, fallback) {
-  const number = Number(value)
-  if (Number.isNaN(number)) return fallback
-  return Math.min(max, Math.max(min, number))
 }
 
 function playChime() {
@@ -422,24 +546,31 @@ function playChime() {
   const gain = ctx.createGain()
   gain.gain.setValueAtTime(0.001, ctx.currentTime)
   gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.02)
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9)
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.1)
   gain.connect(ctx.destination)
 
-  ;[523.25, 659.25, 783.99, 1046.5].forEach((freq, index) => {
+  ;[659.25, 783.99, 987.77, 1318.51].forEach((freq, index) => {
     const osc = ctx.createOscillator()
     osc.type = index % 2 === 0 ? 'triangle' : 'sine'
     osc.frequency.value = freq
     osc.connect(gain)
-    osc.start(ctx.currentTime + index * 0.11)
-    osc.stop(ctx.currentTime + index * 0.11 + 0.38)
+    osc.start(ctx.currentTime + index * 0.13)
+    osc.stop(ctx.currentTime + index * 0.13 + 0.42)
   })
+}
+
+function sendNotification() {
+  if (!state.notify || !('Notification' in window) || Notification.permission !== 'granted') return
+  const title = timer.mode === 'focus' ? 'Focus finished' : 'Break finished'
+  const body = timer.mode === 'focus' ? 'Time for a break.' : 'Back to focus.'
+  new Notification(title, { body })
 }
 
 function renderRoundDots() {
   els.roundDots.innerHTML = ''
-  const done = getSessions() % 4
+  const done = getSessions() % state.longBreakEvery
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < state.longBreakEvery; i++) {
     const dot = document.createElement('span')
     dot.className = i < done ? 'round-dot filled' : 'round-dot'
     dot.title = i < done ? 'Completed sprint' : 'Sprint until long break'
@@ -469,12 +600,13 @@ function renderTodos() {
     empty.className = 'empty-state'
     empty.textContent = 'No tasks yet.'
     els.todoList.append(empty)
+    els.markCurrentDone.disabled = true
     return
   }
 
   state.todos.forEach(todo => {
     const item = document.createElement('article')
-    item.className = `todo-item${todo.done ? ' done' : ''}`
+    item.className = `todo-item${todo.done ? ' done' : ''}${todo.id === selectedTodoId ? ' selected' : ''}`
 
     const check = document.createElement('button')
     check.type = 'button'
@@ -488,7 +620,7 @@ function renderTodos() {
     const use = document.createElement('button')
     use.type = 'button'
     use.className = 'task-action'
-    use.textContent = 'Sprint'
+    use.textContent = todo.id === selectedTodoId ? 'Selected' : 'Sprint'
     use.disabled = todo.done
     use.addEventListener('click', () => useTodoAsGoal(todo.id))
 
@@ -501,6 +633,8 @@ function renderTodos() {
     item.append(check, text, use, remove)
     els.todoList.append(item)
   })
+
+  els.markCurrentDone.disabled = !selectedTodoId
 }
 
 function toggleTodo(id) {
@@ -508,6 +642,11 @@ function toggleTodo(id) {
   if (!todo) return
 
   todo.done = !todo.done
+  if (todo.done && selectedTodoId === id) {
+    selectedTodoId = null
+    state.focusGoal = ''
+    els.focusGoal.value = ''
+  }
   saveState()
   renderTodos()
 }
@@ -516,18 +655,36 @@ function useTodoAsGoal(id) {
   const todo = state.todos.find(item => item.id === id)
   if (!todo || todo.done) return
 
+  selectedTodoId = todo.id
   state.focusGoal = todo.text
   els.focusGoal.value = todo.text
   saveState()
   setMode('focus')
+  renderTodos()
   updateQuestText()
   showToast('Sprint selected')
 }
 
-function removeTodo(id) {
-  state.todos = state.todos.filter(item => item.id !== id)
+function markSelectedTodoDone(showMessage = true) {
+  if (!selectedTodoId) return
+  const todo = state.todos.find(item => item.id === selectedTodoId)
+  if (!todo) return
+  todo.done = true
+  selectedTodoId = null
+  state.focusGoal = ''
+  els.focusGoal.value = ''
   saveState()
   renderTodos()
+  updateQuestText()
+  if (showMessage) showToast('Task marked done')
+}
+
+function removeTodo(id) {
+  state.todos = state.todos.filter(item => item.id !== id)
+  if (selectedTodoId === id) selectedTodoId = null
+  saveState()
+  renderTodos()
+  updateQuestText()
 }
 
 function clearDoneTodos() {
@@ -539,6 +696,7 @@ function clearDoneTodos() {
 
 function resetTodoList() {
   state.todos = []
+  selectedTodoId = null
   state.focusGoal = ''
   els.focusGoal.value = ''
   saveState()
@@ -549,13 +707,25 @@ function resetTodoList() {
 
 function renderLinks() {
   els.quickLinks.innerHTML = ''
-
   state.links = sanitizeLinks(state.links)
+
+  if (state.links.length === 0) {
+    const empty = document.createElement('p')
+    empty.className = 'empty-state'
+    empty.textContent = 'No links yet.'
+    els.quickLinks.append(empty)
+    return
+  }
 
   state.links.forEach((link, index) => {
     const card = document.createElement('article')
     card.className = 'link-card'
 
+    const icon = document.createElement('span')
+    icon.className = 'link-icon'
+    icon.textContent = link.name.slice(0, 1).toUpperCase()
+
+    const meta = document.createElement('div')
     const anchor = document.createElement('a')
     anchor.href = link.url
     anchor.textContent = link.name
@@ -564,13 +734,14 @@ function renderLinks() {
 
     const domain = document.createElement('span')
     domain.textContent = getDomain(link.url)
+    meta.append(anchor, domain)
 
     const edit = document.createElement('button')
     edit.type = 'button'
     edit.textContent = 'Edit'
     edit.addEventListener('click', () => openLinkDialog(index))
 
-    card.append(anchor, domain, edit)
+    card.append(icon, meta, edit)
     els.quickLinks.append(card)
   })
 }
@@ -610,7 +781,6 @@ function saveLink(event) {
 
   const index = els.editingIndex.value
   const link = { name, url }
-
   if (index === '') state.links.push(link)
   else state.links[Number(index)] = link
 
@@ -632,11 +802,38 @@ function deleteLink() {
   showToast('Link removed')
 }
 
+function openSettings() {
+  setDurationInputs()
+  els.settingsDialog.showModal()
+}
+
+function closeSettings() {
+  updateSettingsFromInputs()
+  els.settingsDialog.close()
+  showToast('Settings saved')
+}
+
+function resetAllSettings() {
+  const keepLinks = state.links
+  const keepTodos = state.todos
+  const fresh = defaultState()
+  Object.assign(state, fresh, { links: keepLinks, todos: keepTodos })
+  selectedTodoId = null
+  setTheme(state.theme)
+  setDurationInputs()
+  applyPageToggles()
+  saveState()
+  resetTimerToModeDuration()
+  updateClock()
+  renderRoundDots()
+  showToast('Settings reset')
+}
+
 function showToast(message) {
   els.toast.textContent = message
   els.toast.classList.add('show')
   clearTimeout(showToast.timeout)
-  showToast.timeout = setTimeout(() => els.toast.classList.remove('show'), 2800)
+  showToast.timeout = setTimeout(() => els.toast.classList.remove('show'), 2600)
 }
 
 function initSnow() {
@@ -653,37 +850,39 @@ function initSnow() {
     canvas.style.height = `${window.innerHeight}px`
 
     flakes.length = 0
-    const amount = Math.min(150, Math.floor(window.innerWidth / 8))
+    const amount = Math.min(130, Math.floor(window.innerWidth / 9))
     for (let i = 0; i < amount; i++) {
       flakes.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        r: (Math.random() * 2.6 + 0.7) * window.devicePixelRatio,
+        r: (Math.random() * 2.4 + 0.6) * window.devicePixelRatio,
         speed: (Math.random() * 0.7 + 0.25) * window.devicePixelRatio,
-        drift: (Math.random() * 0.6 - 0.3) * window.devicePixelRatio,
-        opacity: Math.random() * 0.55 + 0.22
+        drift: (Math.random() * 0.8 - 0.4) * window.devicePixelRatio,
+        opacity: Math.random() * 0.48 + 0.2
       })
     }
   }
 
   function draw() {
     ctx.clearRect(0, 0, width, height)
-    flakes.forEach(flake => {
-      flake.y += flake.speed
-      flake.x += flake.drift
+    if (state.showSnow) {
+      flakes.forEach(flake => {
+        flake.y += flake.speed
+        flake.x += flake.drift
 
-      if (flake.y > height) {
-        flake.y = -10
-        flake.x = Math.random() * width
-      }
-      if (flake.x > width) flake.x = 0
-      if (flake.x < 0) flake.x = width
+        if (flake.y > height) {
+          flake.y = -10
+          flake.x = Math.random() * width
+        }
+        if (flake.x > width) flake.x = 0
+        if (flake.x < 0) flake.x = width
 
-      ctx.beginPath()
-      ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(255, 255, 255, ${flake.opacity})`
-      ctx.fill()
-    })
+        ctx.beginPath()
+        ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255, 255, 255, ${flake.opacity})`
+        ctx.fill()
+      })
+    }
     requestAnimationFrame(draw)
   }
 
@@ -697,6 +896,7 @@ function bindEvents() {
   els.startPause.addEventListener('click', toggleTimer)
   els.resetTimer.addEventListener('click', resetTimer)
   els.skipMode.addEventListener('click', skipMode)
+  els.markCurrentDone.addEventListener('click', () => markSelectedTodoDone(true))
   els.addFive.addEventListener('click', () => adjustTimer(300))
   els.subOne.addEventListener('click', () => adjustTimer(-60))
   els.focusGoal.addEventListener('input', updateFocusGoal)
@@ -707,6 +907,10 @@ function bindEvents() {
   els.linkForm.addEventListener('submit', saveLink)
   els.closeDialog.addEventListener('click', () => els.linkDialog.close())
   els.deleteLink.addEventListener('click', deleteLink)
+  els.settingsOpen.addEventListener('click', openSettings)
+  els.settingsClose.addEventListener('click', () => els.settingsDialog.close())
+  els.settingsSave.addEventListener('click', closeSettings)
+  els.resetSettings.addEventListener('click', resetAllSettings)
 
   els.modeTabs.forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.mode)))
   els.presetButtons.forEach(button => button.addEventListener('click', () => applyPreset(button.dataset.preset)))
@@ -715,23 +919,33 @@ function bindEvents() {
     button.addEventListener('click', () => setTheme(button.dataset.themeButton))
   })
 
-  ;[els.focusMinutes, els.shortMinutes, els.longMinutes, els.soundToggle, els.autoSwitchToggle].forEach(input => {
-    input.addEventListener('change', updateDurations)
-  })
+  ;[
+    els.focusMinutes,
+    els.focusSeconds,
+    els.shortMinutes,
+    els.shortSeconds,
+    els.longMinutes,
+    els.longSeconds,
+    els.longBreakEvery,
+    els.autoStartToggle,
+    els.autoSwitchToggle,
+    els.completeTaskToggle,
+    els.soundToggle,
+    els.notifyToggle,
+    els.clockSecondsToggle,
+    els.snowToggle,
+    els.lightsToggle
+  ].forEach(input => input.addEventListener('change', updateSettingsFromInputs))
 }
 
 function init() {
-  document.documentElement.dataset.theme = state.theme
-  els.focusMinutes.value = state.durations.focus
-  els.shortMinutes.value = state.durations.short
-  els.longMinutes.value = state.durations.long
-  els.soundToggle.checked = state.sound
-  els.autoSwitchToggle.checked = state.autoSwitch
+  setTheme(state.theme)
+  applyPageToggles()
+  setDurationInputs()
   els.focusGoal.value = state.focusGoal
-  timer.remaining = state.durations.focus * 60
+  timer.remaining = state.durations.focus
   timer.total = timer.remaining
 
-  setTheme(state.theme)
   updateClock()
   updateCountdown()
   updateSessionPill()
