@@ -2,7 +2,7 @@
   "name": "snowtab",
   "version": "1.0.0",
   "private": true,
-  "description": "A clean Christmas focus homepage with search, quick links, todo, Pomodoro, countdown, and wallpapers.",
+  "description": "A glassy Christmas focus homepage with search, quick links, todo, Pomodoro, countdown, and wallpapers.",
   "scripts": {
     "dev": "python3 -m http.server 5173",
     "build": "rm -rf dist && mkdir -p dist && cp -R index.html favicon.svg src wallpapers dist/"
