@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#26324a"/><stop offset="1" stop-color="#594038"/></linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2d293d"/><stop offset="1" stop-color="#71424e"/></linearGradient>
     <radialGradient id="glow" cx="50%" cy="22%" r="55%"><stop offset="0" stop-color="#fff1aa" stop-opacity=".32"/><stop offset="1" stop-color="#fff1aa" stop-opacity="0"/></radialGradient>
     <filter id="soft"><feGaussianBlur stdDeviation="10"/></filter>
   </defs>
@@ -17,10 +17,8 @@
     <rect x="0" y="140" width="520" height="170" rx="24" fill="#ffe0a8"/><path d="M-20 145 h560 l-45 -80 h-470 z" fill="#d84f4f"/><path d="M40 65 v80 M115 65 v80 M190 65 v80 M265 65 v80 M340 65 v80 M415 65 v80" stroke="#fff5c6" stroke-width="20"/>
     <rect x="50" y="190" width="90" height="70" rx="12" fill="#75bd8d"/><rect x="215" y="190" width="90" height="70" rx="12" fill="#ffe46b"/><rect x="380" y="190" width="90" height="70" rx="12" fill="#75bd8d"/>
   </g>
-  <g transform="translate(1120 390)">
-    <path d="M140 0 L40 150 H95 L10 275 H110 L60 380 H220 L170 275 H270 L185 150 H240 Z" fill="#32b86f"/>
-    <rect x="126" y="350" width="45" height="88" rx="8" fill="#7e4b2f"/>
-    <circle cx="103" cy="158" r="16" fill="#ff6f68"/><circle cx="188" cy="218" r="16" fill="#ffe16f"/><circle cx="144" cy="286" r="16" fill="#fffbdb"/>
-    <path d="M140 -44 L157 -8 L197 -3 L168 23 L176 62 L140 42 L104 62 L112 23 L83 -3 L123 -8 Z" fill="#ffe16f"/>
+  <g transform="translate(180 470)">
+    <rect x="0" y="110" width="190" height="150" rx="16" fill="#f4d4a0"/><path d="M-20 125 L95 35 L210 125 Z" fill="#c7504c"/><rect x="32" y="160" width="45" height="52" rx="8" fill="#7aa98f"/><rect x="112" y="155" width="44" height="40" rx="8" fill="#ffe58a"/><path d="M-8 128 H198" stroke="#fff" stroke-width="18" stroke-linecap="round"/>
+    <rect x="255" y="80" width="230" height="180" rx="18" fill="#ffe4af"/><path d="M230 92 L370 0 L510 92 Z" fill="#7abf87"/><rect x="292" y="142" width="50" height="52" rx="8" fill="#ffe58a"/><rect x="390" y="140" width="54" height="90" rx="10" fill="#bb6b55"/><path d="M245 98 H495" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
   </g>
 </svg>
