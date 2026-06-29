@@ -1,75 +1,76 @@
 const $ = (selector) => document.querySelector(selector)
-const $$ = (selector) => Array.from(document.querySelectorAll(selector))
+const $$ = (selector) => [...document.querySelectorAll(selector)]
 
-const STORAGE_KEY = 'snowtab.clean.v1'
-const RING_LENGTH = 590.62
+const STORAGE_KEY = 'snowtab-clean-v4'
 
 const wallpapers = [
-  ['01-evergreen-glow.svg', 'Evergreen'], ['02-nordic-pine.svg', 'Nordic'], ['03-candle-window.svg', 'Candle'],
-  ['04-frost-glass.svg', 'Frost'], ['05-gold-garland.svg', 'Garland'], ['06-blue-winter.svg', 'Blue'],
-  ['07-cocoa-plaid.svg', 'Cocoa'], ['08-mint-lights.svg', 'Mint'], ['09-red-velvet.svg', 'Velvet'],
-  ['10-snow-village.svg', 'Village'], ['11-pine-shadows.svg', 'Pine'], ['12-quiet-chapel.svg', 'Chapel'],
-  ['13-warm-kitchen.svg', 'Kitchen'], ['14-ice-ornaments.svg', 'Ornaments'], ['15-ribbon-dusk.svg', 'Ribbon'],
-  ['16-forest-stars.svg', 'Stars'], ['17-gingerbread.svg', 'Gingerbread'], ['18-silver-bells.svg', 'Bells'],
-  ['19-toy-workshop.svg', 'Workshop'], ['20-holiday-desk.svg', 'Desk'], ['21-polar-night.svg', 'Polar'],
-  ['22-cranberry-frost.svg', 'Cranberry'], ['23-soft-lanterns.svg', 'Lanterns'], ['24-holly-paper.svg', 'Holly'],
-  ['25-golden-hour.svg', 'Golden'], ['26-snowy-street.svg', 'Street'], ['27-fir-branches.svg', 'Fir'],
-  ['28-paper-stars.svg', 'Paper stars'], ['29-cabin-glow.svg', 'Cabin'], ['30-frozen-lake.svg', 'Lake'],
-  ['31-candy-stripe.svg', 'Candy'], ['32-winter-market.svg', 'Market'], ['33-warm-fireplace.svg', 'Fireplace'],
-  ['34-pine-wreath.svg', 'Wreath'], ['35-moonlit-snow.svg', 'Moonlit'], ['36-peppermint-haze.svg', 'Peppermint'],
-  ['37-cedar-room.svg', 'Cedar'], ['38-snowfall-green.svg', 'Snowfall'], ['39-starry-cocoa.svg', 'Cocoa stars'],
-  ['40-gift-wrap.svg', 'Gift wrap'], ['41-christmas-morning.svg', 'Morning'], ['42-glass-ornaments.svg', 'Glass'],
-  ['43-quiet-red.svg', 'Quiet red'], ['44-northern-lights.svg', 'Aurora'], ['45-icy-mint.svg', 'Icy mint'],
-  ['46-candle-pine.svg', 'Candle pine'], ['47-snow-curtain.svg', 'Curtain'], ['48-jolly-amber.svg', 'Amber'],
-  ['49-deep-green.svg', 'Deep green'], ['50-holiday-lights.svg', 'Lights']
+  ['01-santa-sleigh.svg', 'Santa sleigh'],
+  ['02-north-pole.svg', 'North Pole'],
+  ['03-cozy-cabin.svg', 'Cozy cabin'],
+  ['04-toy-workshop.svg', 'Toy workshop'],
+  ['05-reindeer-night.svg', 'Reindeer night'],
+  ['06-christmas-town.svg', 'Christmas town'],
+  ['07-fireplace.svg', 'Fireplace'],
+  ['08-snowman-yard.svg', 'Snowman yard'],
+  ['09-gingerbread.svg', 'Gingerbread'],
+  ['10-present-pile.svg', 'Present pile'],
+  ['11-candy-forest.svg', 'Candy forest'],
+  ['12-starry-tree.svg', 'Starry tree'],
+  ['13-santa-rooftops.svg', 'Rooftops'],
+  ['14-winter-train.svg', 'Winter train'],
+  ['15-ornament-wall.svg', 'Ornaments'],
+  ['16-holly-window.svg', 'Holly window'],
+  ['17-gift-wrap.svg', 'Gift wrap'],
+  ['18-pine-desk.svg', 'Pine desk'],
+  ['19-carol-street.svg', 'Carol street'],
+  ['20-cookie-table.svg', 'Cookie table'],
+  ['21-snow-globe.svg', 'Snow globe'],
+  ['22-lantern-path.svg', 'Lantern path'],
+  ['23-elf-mail.svg', 'Elf mail'],
+  ['24-peppermint-sky.svg', 'Peppermint sky']
 ]
 
 const defaultState = {
-  theme: 'cream',
-  wallpaper: '06-blue-winter.svg',
+  theme: 'holly',
+  wallpaper: './wallpapers/01-santa-sleigh.svg',
   customWallpaper: '',
-  useCustomWallpaper: false,
+  showClockSeconds: false,
   snow: true,
   lights: true,
-  clockSeconds: false,
-  showTimerSeconds: true,
-  timerSound: true,
-  focusSeconds: 25 * 60,
-  breakSeconds: 5 * 60,
+  focusMinutes: 25,
+  focusSeconds: 0,
+  breakMinutes: 5,
+  breakSeconds: 0,
   links: [
-    { id: crypto.randomUUID(), name: 'GitHub', url: 'https://github.com' },
-    { id: crypto.randomUUID(), name: 'Hack Club', url: 'https://hackclub.com' },
-    { id: crypto.randomUUID(), name: 'YouTube', url: 'https://youtube.com' },
-    { id: crypto.randomUUID(), name: 'MDN Docs', url: 'https://developer.mozilla.org' },
-    { id: crypto.randomUUID(), name: 'Google Drive', url: 'https://drive.google.com' },
-    { id: crypto.randomUUID(), name: 'Gmail', url: 'https://mail.google.com' }
+    { name: 'GitHub', url: 'https://github.com' },
+    { name: 'Hack Club', url: 'https://hackclub.com' },
+    { name: 'YouTube', url: 'https://youtube.com' },
+    { name: 'MDN Docs', url: 'https://developer.mozilla.org' },
+    { name: 'Google Drive', url: 'https://drive.google.com' },
+    { name: 'Gmail', url: 'https://mail.google.com' }
   ],
-  tasks: [],
-  selectedTaskId: null,
-  taskFilter: 'open',
+  todos: [],
+  todoFilter: 'open',
+  focusedTodoId: null,
   sessions: 0
 }
 
 let state = loadState()
 let timer = {
   mode: 'focus',
-  remaining: state.focusSeconds,
-  total: state.focusSeconds,
   running: false,
-  interval: null,
-  lastTick: null
+  remaining: durationFor('focus'),
+  total: durationFor('focus'),
+  intervalId: null,
+  startedAt: null
 }
+let snowflakes = []
+let snowRaf = null
 
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
-    if (!saved) return structuredClone(defaultState)
-    return {
-      ...structuredClone(defaultState),
-      ...saved,
-      links: Array.isArray(saved.links) ? saved.links : structuredClone(defaultState.links),
-      tasks: Array.isArray(saved.tasks) ? saved.tasks : []
-    }
+    return { ...structuredClone(defaultState), ...(saved || {}) }
   } catch {
     return structuredClone(defaultState)
   }
@@ -79,18 +80,30 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
 }
 
-function normalizeUrl(value) {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
+function durationFor(mode) {
+  if (!state) return 25 * 60
+  if (mode === 'break') return Math.max(1, Number(state.breakMinutes || 0) * 60 + Number(state.breakSeconds || 0))
+  return Math.max(1, Number(state.focusMinutes || 0) * 60 + Number(state.focusSeconds || 0))
+}
+
+function formatTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
+function normalizeUrl(url) {
+  const clean = String(url || '').trim()
+  if (!clean) return ''
+  if (/^https?:\/\//i.test(clean)) return clean
+  return `https://${clean}`
 }
 
 function domainFromUrl(url) {
   try {
-    return new URL(url).hostname.replace(/^www\./, '')
+    return new URL(normalizeUrl(url)).hostname.replace(/^www\./, '')
   } catch {
-    return url.replace(/^https?:\/\//, '').split('/')[0]
+    return url
   }
 }
 
@@ -98,468 +111,436 @@ function toast(message) {
   const el = $('#toast')
   el.textContent = message
   el.classList.add('show')
-  clearTimeout(toast.timeout)
-  toast.timeout = setTimeout(() => el.classList.remove('show'), 1700)
+  clearTimeout(toast.timer)
+  toast.timer = setTimeout(() => el.classList.remove('show'), 1800)
 }
 
-function applyVisuals() {
-  document.documentElement.dataset.theme = state.theme
-  document.body.classList.toggle('no-snow', !state.snow)
-  document.body.classList.toggle('no-lights', !state.lights)
-
-  const source = state.useCustomWallpaper && state.customWallpaper
-    ? state.customWallpaper
-    : `./wallpapers/${state.wallpaper}`
-  document.documentElement.style.setProperty('--wallpaper-image', `url("${source}")`)
-
-  $$('.theme-option').forEach((button) => {
-    button.classList.toggle('active', button.dataset.theme === state.theme)
-  })
-  $$('.wallpaper-tile').forEach((button) => {
-    button.classList.toggle('active', !state.useCustomWallpaper && button.dataset.wallpaper === state.wallpaper)
+function updateClock() {
+  const now = new Date()
+  const options = { hour: '2-digit', minute: '2-digit' }
+  if (state.showClockSeconds) options.second = '2-digit'
+  $('#clock').textContent = now.toLocaleTimeString([], options)
+  $('#date-line').textContent = now.toLocaleDateString([], {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
   })
 }
 
-function renderClock() {
+function updateCountdown() {
   const now = new Date()
-  const timeOptions = { hour: '2-digit', minute: '2-digit' }
-  if (state.clockSeconds) timeOptions.second = '2-digit'
-  $('#clock').textContent = now.toLocaleTimeString([], timeOptions)
-  $('#date-line').textContent = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })
-}
-
-function renderCountdown() {
-  const now = new Date()
-  let year = now.getFullYear()
-  let christmas = new Date(year, 11, 25)
-  if (now > christmas) christmas = new Date(year + 1, 11, 25)
+  let christmas = new Date(now.getFullYear(), 11, 25)
+  if (now > christmas) christmas = new Date(now.getFullYear() + 1, 11, 25)
+  const days = Math.max(0, Math.ceil((christmas - now) / 86400000))
+  $('#countdown-days').textContent = days
+  $('#corner-days').textContent = days
 
   const start = new Date(christmas.getFullYear(), 0, 1)
-  const total = christmas - start
-  const elapsed = now - start
-  const days = Math.ceil((christmas - now) / 86400000)
-  const progress = Math.max(0, Math.min(100, (elapsed / total) * 100))
-
-  $('#countdown-days').textContent = days
-  $('#countdown-line').textContent = days === 0
-    ? 'Christmas is today.'
-    : days === 1
-      ? 'One day left.'
-      : 'Lights, food, and break are getting closer.'
+  const progress = Math.min(100, Math.max(0, ((now - start) / (christmas - start)) * 100))
   $('#countdown-fill').style.width = `${progress}%`
 }
 
-function renderLinks() {
-  $('#quick-links').innerHTML = state.links.map((link) => `
-    <div class="link-card" data-id="${link.id}">
-      <a href="${link.url}" target="_blank" rel="noreferrer" aria-label="Open ${escapeHtml(link.name)}">
-        <span class="link-icon">${escapeHtml(link.name.slice(0, 1).toUpperCase())}</span>
-        <strong>${escapeHtml(link.name)}</strong>
-        <span>${escapeHtml(domainFromUrl(link.url))}</span>
-      </a>
-      <div class="link-actions">
-        <button class="ghost edit-link" type="button">Edit</button>
-        <button class="danger delete-link-inline" type="button">Delete</button>
-      </div>
-    </div>
-  `).join('')
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
-}
-
-function filteredTasks() {
-  if (state.taskFilter === 'done') return state.tasks.filter((task) => task.done)
-  if (state.taskFilter === 'all') return state.tasks
-  return state.tasks.filter((task) => !task.done)
-}
-
-function renderTasks() {
-  const openCount = state.tasks.filter((task) => !task.done).length
-  $('#todo-count').textContent = `${openCount} open`
-  $$('.filter').forEach((button) => button.classList.toggle('active', button.dataset.filter === state.taskFilter))
-
-  const tasks = filteredTasks()
-  if (!tasks.length) {
-    $('#todo-list').innerHTML = `<div class="empty-state">${state.tasks.length ? 'Nothing here.' : 'No tasks yet.'}</div>`
-    renderSelectedTask()
-    return
-  }
-
-  $('#todo-list').innerHTML = tasks.map((task) => `
-    <div class="task ${task.done ? 'done' : ''}" data-id="${task.id}">
-      <input class="task-check" type="checkbox" ${task.done ? 'checked' : ''} aria-label="Mark task done" />
-      <span class="task-title">${escapeHtml(task.title)}</span>
-      <button class="ghost small task-focus ${state.selectedTaskId === task.id ? 'active' : ''}" type="button">Focus</button>
-      <button class="ghost small task-delete" type="button">Delete</button>
-    </div>
-  `).join('')
-  renderSelectedTask()
-}
-
-function renderSelectedTask() {
-  const selected = state.tasks.find((task) => task.id === state.selectedTaskId && !task.done)
-  $('#selected-task-title').textContent = selected ? selected.title : 'No task selected'
-  $('#clear-selected-task').hidden = !selected
-  if (!selected && state.selectedTaskId) {
-    state.selectedTaskId = null
-    saveState()
-  }
-}
-
-function setTimerMode(mode) {
-  stopTimer()
-  timer.mode = mode
-  timer.total = mode === 'focus' ? state.focusSeconds : state.breakSeconds
-  timer.remaining = timer.total
-  $$('.mode').forEach((button) => button.classList.toggle('active', button.dataset.mode === mode))
-  $('#timer-mode-title').textContent = mode === 'focus' ? 'Focus' : 'Break'
-  $('#start-pause').textContent = 'Start'
-  renderTimer()
-}
-
-function renderTimer() {
-  const minutes = Math.floor(timer.remaining / 60)
-  const seconds = timer.remaining % 60
-  const showSeconds = state.showTimerSeconds || timer.remaining < 60
-  $('#timer-display').textContent = showSeconds
-    ? `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-    : `${String(minutes).padStart(2, '0')} min`
-
-  $('#timer-state').textContent = timer.running ? 'Running' : 'Ready'
-  $('#session-count').textContent = `${state.sessions} session${state.sessions === 1 ? '' : 's'}`
-
-  const progress = timer.total > 0 ? 1 - timer.remaining / timer.total : 1
-  $('#timer-progress').style.strokeDashoffset = `${RING_LENGTH * (1 - progress)}`
-}
-
-function startTimer() {
-  if (timer.running) return
-  timer.running = true
-  timer.lastTick = Date.now()
-  timer.interval = setInterval(tickTimer, 250)
-  $('#start-pause').textContent = 'Pause'
-  renderTimer()
-}
-
-function stopTimer() {
-  timer.running = false
-  clearInterval(timer.interval)
-  timer.interval = null
-  $('#start-pause').textContent = 'Start'
-  renderTimer()
-}
-
-function tickTimer() {
-  const now = Date.now()
-  const diff = Math.floor((now - timer.lastTick) / 1000)
-  if (diff <= 0) return
-  timer.lastTick += diff * 1000
-  timer.remaining = Math.max(0, timer.remaining - diff)
-  if (timer.remaining === 0) completeTimer()
-  renderTimer()
-}
-
-function completeTimer() {
-  stopTimer()
-  if (timer.mode === 'focus') {
-    state.sessions += 1
-    saveState()
-    toast('Focus session done')
-    if (state.timerSound) playBell()
-    setTimerMode('break')
-  } else {
-    toast('Break done')
-    if (state.timerSound) playBell()
-    setTimerMode('focus')
-  }
-}
-
-function playBell() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(880, ctx.currentTime)
-    osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.16)
-    gain.gain.setValueAtTime(0.001, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.36)
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.start()
-    osc.stop(ctx.currentTime + 0.38)
-  } catch {}
-}
-
-function renderWallpaperPicker() {
-  $('#wallpaper-grid').innerHTML = wallpapers.map(([file, name]) => `
-    <button class="wallpaper-tile" data-wallpaper="${file}" data-name="${escapeHtml(name)}" style="background-image: url('./wallpapers/${file}')" type="button"></button>
-  `).join('')
-}
-
-function syncSettingsForm() {
-  $('#focus-minutes').value = Math.floor(state.focusSeconds / 60)
-  $('#focus-seconds').value = state.focusSeconds % 60
-  $('#break-minutes').value = Math.floor(state.breakSeconds / 60)
-  $('#break-seconds').value = state.breakSeconds % 60
-  $('#show-timer-seconds').checked = state.showTimerSeconds
-  $('#timer-sound').checked = state.timerSound
+function applyPageSettings() {
+  document.documentElement.dataset.theme = state.theme
+  const wallpaper = state.customWallpaper || state.wallpaper || defaultState.wallpaper
+  document.documentElement.style.setProperty('--wallpaper-image', `url("${wallpaper}")`)
+  document.body.classList.toggle('hide-snow', !state.snow)
+  document.body.classList.toggle('hide-lights', !state.lights)
+  $('#clock-seconds-toggle').checked = state.showClockSeconds
   $('#snow-toggle').checked = state.snow
   $('#lights-toggle').checked = state.lights
-  $('#clock-seconds-toggle').checked = state.clockSeconds
-  $('#custom-wallpaper-url').value = state.customWallpaper
+  $('#custom-wallpaper-url').value = state.customWallpaper || ''
+  $('#focus-minutes').value = state.focusMinutes
+  $('#focus-seconds').value = state.focusSeconds
+  $('#break-minutes').value = state.breakMinutes
+  $('#break-seconds').value = state.breakSeconds
+  updateWallpaperGridActive()
+  setupLights()
+  setupSnow()
 }
 
-function saveSettingsFromForm() {
-  const focus = Number($('#focus-minutes').value) * 60 + Number($('#focus-seconds').value)
-  const brk = Number($('#break-minutes').value) * 60 + Number($('#break-seconds').value)
-  state.focusSeconds = Math.max(1, focus)
-  state.breakSeconds = Math.max(1, brk)
-  state.showTimerSeconds = $('#show-timer-seconds').checked
-  state.timerSound = $('#timer-sound').checked
-  state.snow = $('#snow-toggle').checked
-  state.lights = $('#lights-toggle').checked
-  state.clockSeconds = $('#clock-seconds-toggle').checked
-  state.customWallpaper = $('#custom-wallpaper-url').value.trim()
-  state.useCustomWallpaper = Boolean(state.customWallpaper)
-  saveState()
-  applyVisuals()
-  setTimerMode(timer.mode)
-  renderClock()
+function setupLights() {
+  const holder = $('#light-string')
+  if (holder.children.length) return
+  for (let i = 0; i < 22; i += 1) {
+    holder.appendChild(document.createElement('span'))
+  }
 }
 
-function bindEvents() {
+function setupSearch() {
   $('#search-form').addEventListener('submit', (event) => {
     event.preventDefault()
     const query = $('#search-input').value.trim()
     if (!query) return
-    const looksLikeUrl = query.includes('.') && !query.includes(' ')
-    window.location.href = looksLikeUrl ? normalizeUrl(query) : `https://www.google.com/search?q=${encodeURIComponent(query)}`
+    const looksLikeUrl = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}/i.test(query)
+    const target = looksLikeUrl ? normalizeUrl(query) : `https://www.google.com/search?q=${encodeURIComponent(query)}`
+    window.location.href = target
+  })
+}
+
+function renderLinks() {
+  const wrapper = $('#quick-links')
+  wrapper.innerHTML = ''
+  state.links.forEach((link, index) => {
+    const card = document.createElement('div')
+    card.className = 'link-card'
+    const first = link.name.trim().charAt(0).toUpperCase() || '?'
+    card.innerHTML = `
+      <a class="link-main" href="${normalizeUrl(link.url)}">
+        <span class="link-icon">${first}</span>
+        <span class="link-title">${escapeHtml(link.name)}</span>
+        <span class="link-url">${escapeHtml(domainFromUrl(link.url))}</span>
+      </a>
+      <div class="link-actions">
+        <button class="soft-button edit-link-button" type="button" data-index="${index}">Edit</button>
+        <button class="soft-button delete-link-button" type="button" data-index="${index}">Delete</button>
+      </div>
+    `
+    wrapper.appendChild(card)
   })
 
+  $$('.edit-link-button').forEach((button) => button.addEventListener('click', () => openLinkDialog(Number(button.dataset.index))))
+  $$('.delete-link-button').forEach((button) => button.addEventListener('click', () => {
+    state.links.splice(Number(button.dataset.index), 1)
+    saveState()
+    renderLinks()
+  }))
+}
+
+function openLinkDialog(index = null) {
+  const editing = index !== null
+  $('#editing-index').value = editing ? String(index) : ''
+  $('#dialog-title').textContent = editing ? 'Edit link' : 'Add link'
+  $('#link-name').value = editing ? state.links[index].name : ''
+  $('#link-url').value = editing ? state.links[index].url : ''
+  $('#delete-link').style.display = editing ? 'inline-flex' : 'none'
+  $('#link-dialog').showModal()
+}
+
+function setupLinks() {
   $('#add-link').addEventListener('click', () => openLinkDialog())
-  $('#quick-links').addEventListener('click', (event) => {
-    const card = event.target.closest('.link-card')
-    if (!card) return
-    const id = card.dataset.id
-    if (event.target.closest('.edit-link')) {
-      event.preventDefault()
-      openLinkDialog(id)
-    }
-    if (event.target.closest('.delete-link-inline')) {
-      event.preventDefault()
-      state.links = state.links.filter((link) => link.id !== id)
-      saveState()
-      renderLinks()
-    }
-  })
-
-  $('#link-close').addEventListener('click', () => $('#link-dialog').close())
+  $('#close-dialog').addEventListener('click', () => $('#link-dialog').close())
   $('#link-form').addEventListener('submit', (event) => {
     event.preventDefault()
-    const id = $('#editing-link-id').value
     const name = $('#link-name').value.trim()
     const url = normalizeUrl($('#link-url').value)
     if (!name || !url) return
-    if (id) {
-      const link = state.links.find((item) => item.id === id)
-      if (link) Object.assign(link, { name, url })
-    } else {
-      state.links.push({ id: crypto.randomUUID(), name, url })
-    }
+    const index = $('#editing-index').value
+    if (index === '') state.links.push({ name, url })
+    else state.links[Number(index)] = { name, url }
     saveState()
     renderLinks()
     $('#link-dialog').close()
   })
   $('#delete-link').addEventListener('click', () => {
-    const id = $('#editing-link-id').value
-    state.links = state.links.filter((link) => link.id !== id)
-    saveState()
-    renderLinks()
+    const index = Number($('#editing-index').value)
+    if (Number.isInteger(index)) {
+      state.links.splice(index, 1)
+      saveState()
+      renderLinks()
+    }
     $('#link-dialog').close()
   })
+}
 
+function renderTodos() {
+  const list = $('#todo-list')
+  const filtered = state.todos.filter((todo) => {
+    if (state.todoFilter === 'done') return todo.done
+    if (state.todoFilter === 'open') return !todo.done
+    return true
+  })
+
+  const openCount = state.todos.filter((todo) => !todo.done).length
+  $('#todo-count').textContent = `${openCount} open`
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state">${state.todos.length ? 'Nothing in this filter.' : 'No tasks yet.'}</div>`
+    updateFocusedTask()
+    return
+  }
+
+  list.innerHTML = ''
+  filtered.forEach((todo) => {
+    const item = document.createElement('div')
+    item.className = `todo-item ${todo.done ? 'done' : ''}`
+    item.innerHTML = `
+      <input class="todo-check" type="checkbox" ${todo.done ? 'checked' : ''} aria-label="Mark task done" />
+      <span class="todo-text">${escapeHtml(todo.text)}</span>
+      <button class="soft-button todo-focus" type="button">Focus</button>
+      <button class="soft-button todo-delete" type="button">Delete</button>
+    `
+    item.querySelector('.todo-check').addEventListener('change', () => {
+      todo.done = !todo.done
+      if (todo.done && state.focusedTodoId === todo.id) state.focusedTodoId = null
+      saveState()
+      renderTodos()
+    })
+    item.querySelector('.todo-focus').addEventListener('click', () => {
+      state.focusedTodoId = todo.id
+      saveState()
+      updateFocusedTask()
+      toast('Task added to timer')
+    })
+    item.querySelector('.todo-delete').addEventListener('click', () => {
+      state.todos = state.todos.filter((entry) => entry.id !== todo.id)
+      if (state.focusedTodoId === todo.id) state.focusedTodoId = null
+      saveState()
+      renderTodos()
+    })
+    list.appendChild(item)
+  })
+  updateFocusedTask()
+}
+
+function setupTodos() {
   $('#todo-form').addEventListener('submit', (event) => {
     event.preventDefault()
     const input = $('#todo-input')
-    const title = input.value.trim()
-    if (!title) return
-    state.tasks.unshift({ id: crypto.randomUUID(), title, done: false, createdAt: Date.now() })
+    const text = input.value.trim()
+    if (!text) return
+    state.todos.unshift({ id: crypto.randomUUID(), text, done: false, createdAt: Date.now() })
     input.value = ''
+    state.todoFilter = 'open'
     saveState()
-    renderTasks()
+    renderTodos()
   })
 
-  $('#todo-list').addEventListener('click', (event) => {
-    const taskEl = event.target.closest('.task')
-    if (!taskEl) return
-    const task = state.tasks.find((item) => item.id === taskEl.dataset.id)
-    if (!task) return
-    if (event.target.matches('.task-check')) {
-      task.done = event.target.checked
-      if (task.done && state.selectedTaskId === task.id) state.selectedTaskId = null
+  $$('.filter-button').forEach((button) => {
+    button.addEventListener('click', () => {
+      state.todoFilter = button.dataset.filter
+      $$('.filter-button').forEach((entry) => entry.classList.toggle('active', entry === button))
       saveState()
-      renderTasks()
-    }
-    if (event.target.closest('.task-focus')) {
-      if (!task.done) state.selectedTaskId = task.id
-      saveState()
-      renderTasks()
-    }
-    if (event.target.closest('.task-delete')) {
-      state.tasks = state.tasks.filter((item) => item.id !== task.id)
-      if (state.selectedTaskId === task.id) state.selectedTaskId = null
-      saveState()
-      renderTasks()
-    }
+      renderTodos()
+    })
   })
-
-  $$('.filter').forEach((button) => button.addEventListener('click', () => {
-    state.taskFilter = button.dataset.filter
-    saveState()
-    renderTasks()
-  }))
 
   $('#clear-done').addEventListener('click', () => {
-    state.tasks = state.tasks.filter((task) => !task.done)
+    state.todos = state.todos.filter((todo) => !todo.done)
     saveState()
-    renderTasks()
+    renderTodos()
   })
-  $('#clear-selected-task').addEventListener('click', () => {
-    state.selectedTaskId = null
-    saveState()
-    renderTasks()
-  })
+}
 
-  $$('.mode').forEach((button) => button.addEventListener('click', () => setTimerMode(button.dataset.mode)))
-  $('#start-pause').addEventListener('click', () => timer.running ? stopTimer() : startTimer())
-  $('#reset-timer').addEventListener('click', () => setTimerMode(timer.mode))
+function focusedTodo() {
+  return state.todos.find((todo) => todo.id === state.focusedTodoId && !todo.done)
+}
 
-  $('#settings-open').addEventListener('click', () => {
-    syncSettingsForm()
-    applyVisuals()
-    $('#settings-dialog').showModal()
-  })
+function updateFocusedTask() {
+  const task = focusedTodo()
+  $('#current-task-title').textContent = task ? task.text : 'No task selected'
+}
+
+function setMode(mode) {
+  timer.mode = mode
+  timer.running = false
+  clearInterval(timer.intervalId)
+  timer.total = durationFor(mode)
+  timer.remaining = timer.total
+  timer.startedAt = null
+  $$('.mode-tab').forEach((button) => button.classList.toggle('active', button.dataset.mode === mode))
+  $('#timer-mode-title').textContent = mode === 'focus' ? 'Focus' : 'Break'
+  renderTimer()
+}
+
+function renderTimer() {
+  const time = formatTime(timer.remaining)
+  $('#timer-display').textContent = time
+  $('#mini-timer-time').textContent = time
+  $('#mini-timer-label').textContent = timer.mode === 'focus' ? 'Focus' : 'Break'
+  $('#timer-subtitle').textContent = timer.running ? 'Running' : 'Ready'
+  $('#start-pause').textContent = timer.running ? 'Pause' : 'Start'
+  $('#mini-start').textContent = timer.running ? 'Pause' : 'Start'
+  $('#session-pill').textContent = `${state.sessions} session${state.sessions === 1 ? '' : 's'}`
+  const done = 1 - timer.remaining / timer.total
+  $('#timer-progress').style.width = `${Math.max(0, Math.min(100, done * 100))}%`
+}
+
+function toggleTimer() {
+  if (timer.running) {
+    timer.running = false
+    clearInterval(timer.intervalId)
+    renderTimer()
+    return
+  }
+  timer.running = true
+  timer.startedAt = Date.now()
+  timer.intervalId = setInterval(() => {
+    timer.remaining -= 1
+    if (timer.remaining <= 0) finishTimer()
+    else renderTimer()
+  }, 1000)
+  renderTimer()
+}
+
+function finishTimer() {
+  clearInterval(timer.intervalId)
+  timer.running = false
+  timer.remaining = 0
+  if (timer.mode === 'focus') state.sessions += 1
+  saveState()
+  renderTimer()
+  toast(timer.mode === 'focus' ? 'Focus done' : 'Break done')
+}
+
+function resetTimer() {
+  clearInterval(timer.intervalId)
+  timer.running = false
+  timer.total = durationFor(timer.mode)
+  timer.remaining = timer.total
+  renderTimer()
+}
+
+function setupTimer() {
+  $('#start-pause').addEventListener('click', toggleTimer)
+  $('#mini-start').addEventListener('click', toggleTimer)
+  $('#reset-timer').addEventListener('click', resetTimer)
+  $$('.mode-tab').forEach((button) => button.addEventListener('click', () => setMode(button.dataset.mode)))
+}
+
+function setupSettings() {
+  $('#settings-open').addEventListener('click', () => $('#settings-dialog').showModal())
   $('#settings-close').addEventListener('click', () => $('#settings-dialog').close())
   $('#settings-save').addEventListener('click', () => {
-    saveSettingsFromForm()
+    readSettingsInputs()
+    saveState()
+    applyPageSettings()
+    resetTimer()
+    updateClock()
     $('#settings-dialog').close()
   })
   $('#reset-settings').addEventListener('click', () => {
-    const keepLinks = state.links
-    const keepTasks = state.tasks
-    state = { ...structuredClone(defaultState), links: keepLinks, tasks: keepTasks }
+    state = structuredClone(defaultState)
     saveState()
-    syncSettingsForm()
-    applyVisuals()
-    setTimerMode('focus')
-    renderAll()
+    applyPageSettings()
+    renderLinks()
+    renderTodos()
+    setMode('focus')
+    updateClock()
     toast('Settings reset')
   })
-
-  $$('.theme-option').forEach((button) => button.addEventListener('click', () => {
-    state.theme = button.dataset.theme
+  $$('.theme-tile').forEach((button) => button.addEventListener('click', () => {
+    state.theme = button.dataset.themeButton
     saveState()
-    applyVisuals()
+    applyPageSettings()
   }))
-
-  $('#wallpaper-grid').addEventListener('click', (event) => {
-    const button = event.target.closest('.wallpaper-tile')
-    if (!button) return
-    state.wallpaper = button.dataset.wallpaper
-    state.useCustomWallpaper = false
-    state.customWallpaper = ''
-    $('#custom-wallpaper-url').value = ''
-    saveState()
-    applyVisuals()
-  })
-
   $('#random-wallpaper').addEventListener('click', () => {
-    const [file] = wallpapers[Math.floor(Math.random() * wallpapers.length)]
-    state.wallpaper = file
-    state.useCustomWallpaper = false
+    const random = wallpapers[Math.floor(Math.random() * wallpapers.length)]
+    state.wallpaper = `./wallpapers/${random[0]}`
     state.customWallpaper = ''
-    $('#custom-wallpaper-url').value = ''
     saveState()
-    applyVisuals()
+    applyPageSettings()
+  })
+  $('#custom-wallpaper-url').addEventListener('change', () => {
+    state.customWallpaper = $('#custom-wallpaper-url').value.trim()
+    saveState()
+    applyPageSettings()
   })
 }
 
-function openLinkDialog(id = '') {
-  const link = state.links.find((item) => item.id === id)
-  $('#editing-link-id').value = link?.id || ''
-  $('#link-dialog-title').textContent = link ? 'Edit link' : 'Add link'
-  $('#link-name').value = link?.name || ''
-  $('#link-url').value = link?.url || ''
-  $('#delete-link').hidden = !link
-  $('#link-dialog').showModal()
-  $('#link-name').focus()
+function readSettingsInputs() {
+  state.showClockSeconds = $('#clock-seconds-toggle').checked
+  state.snow = $('#snow-toggle').checked
+  state.lights = $('#lights-toggle').checked
+  state.focusMinutes = clampNumber($('#focus-minutes').value, 0, 180, 25)
+  state.focusSeconds = clampNumber($('#focus-seconds').value, 0, 59, 0)
+  state.breakMinutes = clampNumber($('#break-minutes').value, 0, 90, 5)
+  state.breakSeconds = clampNumber($('#break-seconds').value, 0, 59, 0)
 }
 
-function renderAll() {
-  renderLinks()
-  renderTasks()
-  renderClock()
-  renderCountdown()
-  renderTimer()
+function clampNumber(value, min, max, fallback) {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return fallback
+  return Math.min(max, Math.max(min, Math.floor(number)))
+}
+
+function renderWallpaperGrid() {
+  const grid = $('#wallpaper-grid')
+  grid.innerHTML = ''
+  wallpapers.forEach(([file, label]) => {
+    const button = document.createElement('button')
+    button.className = 'wallpaper-tile'
+    button.type = 'button'
+    button.dataset.wallpaper = `./wallpapers/${file}`
+    button.style.backgroundImage = `linear-gradient(180deg, transparent, rgba(0,0,0,.55)), url("./wallpapers/${file}")`
+    button.textContent = label
+    button.addEventListener('click', () => {
+      state.wallpaper = button.dataset.wallpaper
+      state.customWallpaper = ''
+      saveState()
+      applyPageSettings()
+    })
+    grid.appendChild(button)
+  })
+  updateWallpaperGridActive()
+}
+
+function updateWallpaperGridActive() {
+  $$('.wallpaper-tile').forEach((button) => {
+    button.classList.toggle('active', !state.customWallpaper && button.dataset.wallpaper === state.wallpaper)
+  })
 }
 
 function setupSnow() {
   const canvas = $('#snow-canvas')
   const ctx = canvas.getContext('2d')
-  let flakes = []
-
-  function resize() {
-    const dpr = window.devicePixelRatio || 1
-    canvas.width = window.innerWidth * dpr
-    canvas.height = window.innerHeight * dpr
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    flakes = Array.from({ length: Math.min(160, Math.floor(window.innerWidth / 9)) }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      r: Math.random() * 1.8 + 0.7,
-      s: Math.random() * 0.45 + 0.18,
-      drift: Math.random() * 0.35 - 0.18
-    }))
+  const resize = () => {
+    canvas.width = window.innerWidth * window.devicePixelRatio
+    canvas.height = window.innerHeight * window.devicePixelRatio
+    ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0)
   }
+  resize()
+  window.addEventListener('resize', resize)
 
-  function draw() {
+  snowflakes = Array.from({ length: 95 }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 2.1 + 0.8,
+    s: Math.random() * 0.7 + 0.25,
+    drift: Math.random() * 0.4 - 0.2
+  }))
+
+  const draw = () => {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
     if (state.snow) {
-      ctx.fillStyle = 'rgba(255,255,255,0.72)'
-      for (const flake of flakes) {
+      ctx.fillStyle = 'rgba(255,255,255,.72)'
+      snowflakes.forEach((flake) => {
+        flake.y += flake.s
+        flake.x += flake.drift
+        if (flake.y > window.innerHeight + 6) flake.y = -6
+        if (flake.x > window.innerWidth + 6) flake.x = -6
+        if (flake.x < -6) flake.x = window.innerWidth + 6
         ctx.beginPath()
         ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2)
         ctx.fill()
-        flake.y += flake.s
-        flake.x += flake.drift
-        if (flake.y > window.innerHeight + 8) {
-          flake.y = -8
-          flake.x = Math.random() * window.innerWidth
-        }
-      }
+      })
     }
-    requestAnimationFrame(draw)
+    snowRaf = requestAnimationFrame(draw)
   }
-
-  window.addEventListener('resize', resize)
-  resize()
-  draw()
+  if (!snowRaf) draw()
 }
 
-renderWallpaperPicker()
-applyVisuals()
-syncSettingsForm()
-bindEvents()
-renderAll()
-setupSnow()
-setInterval(renderClock, 1000)
-setInterval(renderCountdown, 60000)
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[char]))
+}
+
+function init() {
+  setupSearch()
+  setupLinks()
+  setupTodos()
+  setupTimer()
+  setupSettings()
+  renderWallpaperGrid()
+  applyPageSettings()
+  renderLinks()
+  renderTodos()
+  setMode('focus')
+  updateCountdown()
+  updateClock()
+  setInterval(updateClock, 1000)
+  setInterval(updateCountdown, 60000)
+}
+
+init()
