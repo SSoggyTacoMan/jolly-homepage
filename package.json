@@ -1,8 +1,8 @@
 {
   "name": "snowtab",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": false,
-  "description": "A Christmas themed study homepage with quick links, Pomodoro, tasks, countdown, settings, and festive CSS decorations.",
+  "description": "A polished Christmas themed study homepage with quick links, Pomodoro, tasks, countdown, settings, and a favicon.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
