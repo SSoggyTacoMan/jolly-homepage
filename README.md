@@ -1,30 +1,42 @@
 # SnowTab
 
-A simple jolly homepage with a large clock, search, quick links, a Pomodoro timer, a todo list, notes, and Christmas wallpapers.
+SnowTab is a small focus homepage with a Christmas theme.
 
-## Run
+It has a clock, search, quick links, a simple todo list, a Pomodoro timer, a Christmas countdown, and a few wallpaper options. It is built with plain HTML, CSS, and JavaScript.
+
+## features
+
+- clock and date
+- search with selectable search engines
+- editable quick links
+- simple todo list
+- Pomodoro timer
+- Christmas countdown
+- wallpaper picker
+- snow and lights settings
+- saved settings with localStorage
+- no build step needed
+
+## running locally
+
+Install dependencies:
 
 ```bash
 pnpm install
+```
+
+Start the local server:
+
+```bash
 pnpm dev
 ```
 
-Open `http://localhost:5173`.
+Then open the local URL shown in the terminal.
 
-## Features
+## notes
 
-- Large clock with optional seconds
-- Date with optional year
-- Search engine picker
-- Editable quick links
-- Simple Pomodoro timer
-- Simple todo list
-- Scratch pad
-- Christmas countdown
-- Working wallpaper picker with SVG scenes
-- Snow and light toggles
-- No build dependencies
+The app stores settings, links, and tasks in the browser with localStorage. Clearing site data will reset them.
 
-## Deploy
+## license
 
-This is static HTML, CSS, and JS. You can deploy the whole folder to GitHub Pages, Netlify, or Vercel.
+MIT
