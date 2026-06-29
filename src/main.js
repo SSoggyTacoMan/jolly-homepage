@@ -32,6 +32,7 @@ const defaultState = {
     showYear: true,
     snow: true,
     lights: true,
+    performance: true,
     searchEngine: "google",
     focusMinutes: 25,
     breakMinutes: 5,
@@ -110,7 +111,7 @@ function setWallpaper() {
   document.body.style.backgroundImage = `linear-gradient(180deg, rgba(5, 20, 19, 0.18), rgba(5, 20, 19, 0.38)), url("${path}")`;
   document.body.style.backgroundSize = "cover";
   document.body.style.backgroundPosition = "center";
-  document.body.style.backgroundAttachment = "fixed";
+  document.body.style.backgroundAttachment = "scroll";
   $$(".wallpaper-option").forEach((button) => button.classList.toggle("active", button.dataset.wallpaper === state.settings.wallpaper && !custom));
 }
 
@@ -276,6 +277,7 @@ function renderSettings() {
   $("#custom-wallpaper-url").value = state.settings.customWallpaper;
   document.body.classList.toggle("no-snow", !state.settings.snow);
   document.body.classList.toggle("no-lights", !state.settings.lights);
+  document.body.classList.toggle("performance-mode", state.settings.performance);
   setWallpaper();
 }
 
@@ -481,33 +483,54 @@ function wireEvents() {
 function initSnow() {
   const canvas = $("#snow-canvas");
   const ctx = canvas.getContext("2d");
-  const flakes = Array.from({ length: 90 }, () => ({
-    x: Math.random(), y: Math.random(), r: Math.random() * 2 + .6, speed: Math.random() * .55 + .18, sway: Math.random() * .7 + .15
+  const flakeCount = window.innerWidth < 760 ? 24 : 42;
+  const flakes = Array.from({ length: flakeCount }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 1.7 + 0.55,
+    speed: Math.random() * 0.42 + 0.12,
+    sway: Math.random() * 0.55 + 0.12,
+    phase: Math.random() * 8
   }));
+  let lastDraw = 0;
+
   function resize() {
-    canvas.width = window.innerWidth * devicePixelRatio;
-    canvas.height = window.innerHeight * devicePixelRatio;
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    canvas.width = Math.floor(window.innerWidth * ratio);
+    canvas.height = Math.floor(window.innerHeight * ratio);
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
-    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   }
-  function draw() {
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    ctx.fillStyle = "rgba(255,255,255,.72)";
-    flakes.forEach((flake) => {
-      const x = flake.x * window.innerWidth + Math.sin(Date.now() / 1200 + flake.y * 10) * flake.sway * 16;
-      const y = flake.y * window.innerHeight;
+
+  function draw(now = 0) {
+    requestAnimationFrame(draw);
+    if (!state.settings.snow || document.hidden) return;
+    if (now - lastDraw < 34) return;
+    lastDraw = now;
+
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "rgba(255,255,255,.68)";
+
+    for (const flake of flakes) {
+      const x = flake.x * w + Math.sin(now / 1300 + flake.phase) * flake.sway * 14;
+      const y = flake.y * h;
       ctx.beginPath();
       ctx.arc(x, y, flake.r, 0, Math.PI * 2);
       ctx.fill();
-      flake.y += flake.speed / window.innerHeight;
-      if (flake.y > 1.02) { flake.y = -0.02; flake.x = Math.random(); }
-    });
-    requestAnimationFrame(draw);
+      flake.y += flake.speed / h;
+      if (flake.y > 1.02) {
+        flake.y = -0.02;
+        flake.x = Math.random();
+      }
+    }
   }
+
   resize();
-  window.addEventListener("resize", resize);
-  draw();
+  window.addEventListener("resize", resize, { passive: true });
+  requestAnimationFrame(draw);
 }
 
 function init() {
