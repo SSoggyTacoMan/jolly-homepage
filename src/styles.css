@@ -6,7 +6,7 @@
   --glass: rgba(18, 48, 42, 0.56);
   --glass-strong: rgba(18, 48, 42, 0.72);
   --glass-soft: rgba(255, 255, 255, 0.08);
-  --accent: #f7d95f;
+  --accent: #e63946;
   --accent-2: #a8f087;
   --red: #ff7a72;
   --green: #8ee8b4;
@@ -485,9 +485,9 @@ textarea::placeholder { color: rgba(255,248,233,.54); }
   font-weight: 900;
 }
 .mode-tab.active, .filter-button.active {
-  color: #143027;
-  border-color: transparent;
-  background: var(--accent);
+  color: var(--ink);
+  border-color: rgba(255,255,255,.4);
+  background: rgba(255,255,255,.24);
 }
 
 .todo-form {

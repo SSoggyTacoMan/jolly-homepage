@@ -37,7 +37,8 @@ const defaultState = {
     focusMinutes: 25,
     breakMinutes: 5,
     wallpaper: "santa-village",
-    customWallpaper: ""
+    customWallpaper: "",
+    accentColor: "#e63946"
   },
   links: defaultLinks,
   todos: [],
@@ -276,6 +277,12 @@ function renderSettings() {
   $("#focus-minutes").value = state.settings.focusMinutes;
   $("#break-minutes").value = state.settings.breakMinutes;
   $("#custom-wallpaper-url").value = state.settings.customWallpaper;
+  
+  if ($("#accent-color")) {
+    $("#accent-color").value = state.settings.accentColor || "#e63946";
+  }
+  document.documentElement.style.setProperty('--accent', state.settings.accentColor || "#e63946");
+
   document.body.classList.toggle("no-snow", !state.settings.snow);
   document.body.classList.toggle("no-lights", !state.settings.lights);
   document.body.classList.toggle("performance-mode", state.settings.performance);
@@ -466,6 +473,13 @@ function wireEvents() {
     saveState();
     renderSettings();
   });
+  if ($("#accent-color")) {
+    $("#accent-color").addEventListener("change", (event) => {
+      state.settings.accentColor = event.target.value;
+      saveState();
+      renderSettings();
+    });
+  }
   $("#random-wallpaper").addEventListener("click", () => {
     const choice = wallpapers[Math.floor(Math.random() * wallpapers.length)];
     state.settings.wallpaper = choice.id;
