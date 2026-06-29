@@ -1,40 +1,30 @@
 # SnowTab
 
-A glassy Christmas focus homepage with a big clock, search, quick links, a simple todo list, a Pomodoro timer, a scratch pad, and Christmas wallpapers.
+A simple jolly homepage with a large clock, search, quick links, a Pomodoro timer, a todo list, notes, and Christmas wallpapers.
 
-## Features
-
-- Big clock with optional seconds
-- Date with optional year
-- Search engine picker
-- Quick links with favicons
-- Simple todo list
-- Simple Pomodoro timer
-- Scratch pad
-- Christmas countdown
-- Theme picker
-- Wallpaper picker and custom wallpaper URL
-- Snow and light toggles
-- Favicon included
-- Saves settings in localStorage
-
-## Run locally
+## Run
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Then open:
+Open `http://localhost:5173`.
 
-```txt
-http://localhost:5173
-```
+## Features
 
-## Build
+- Large clock with optional seconds
+- Date with optional year
+- Search engine picker
+- Editable quick links
+- Simple Pomodoro timer
+- Simple todo list
+- Scratch pad
+- Christmas countdown
+- Working wallpaper picker with SVG scenes
+- Snow and light toggles
+- No build dependencies
 
-```bash
-pnpm build
-```
+## Deploy
 
-The output is copied to `dist`.
+This is static HTML, CSS, and JS. You can deploy the whole folder to GitHub Pages, Netlify, or Vercel.
