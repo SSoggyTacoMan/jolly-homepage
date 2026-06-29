@@ -1,26 +1,38 @@
 # SnowTab
 
-SnowTab is a Christmas themed start page for studying. It has quick links, search, a Pomodoro timer, a todo list, Christmas countdown, editable settings, themes, snow, lights, and CSS Christmas decorations.
+A Christmas themed study homepage with quick links, a Pomodoro timer, a better task list, countdown, settings, and festive CSS decorations.
 
 ## Features
 
-- Search bar that opens Google searches or pasted URLs
-- Launch pad with editable quick links
-- Todo list with empty defaults, no fake starter tasks
-- Pomodoro timer with focus, short break, and long break modes
-- Timer presets: 25/5, 50/10, and 15/5
-- Custom timer minutes and seconds in settings
-- Auto start and auto switch options
-- Optional sound and browser notifications
-- Option to mark the selected task done after a focus session
-- Christmas countdown with progress bar and ornaments
-- Christmas themes: Holly, Candy, Cocoa, and Frost
-- Toggle clock seconds, snow, and lights
-- Saves settings, links, tasks, and timer preferences in localStorage
+- Search bar
+- Editable quick links
+- Christmas countdown
+- Pomodoro timer
+- Focus, short break, and long break modes
+- Timer presets
+- Custom minutes and seconds in settings
+- Task list with priorities
+- Task sprint estimates
+- Task filters for open, all, and done
+- Pick next task button
+- Select a task for the timer
+- Log focus sprints onto the selected task
+- Move, edit, delete, and finish tasks
+- Themes
+- Snow and Christmas lights toggles
+- Local storage saving
 
 ## Run locally
 
 ```bash
+pnpm install
+pnpm dev
+```
+
+If you already installed an older broken copy, reset the install first:
+
+```bash
+rm -rf node_modules pnpm-lock.yaml
 pnpm install
 pnpm dev
 ```
@@ -31,12 +43,6 @@ pnpm dev
 pnpm build
 ```
 
-The built files will be in `dist`.
+## Notes
 
-## Deploy
-
-You can deploy this on Vercel, Netlify, GitHub Pages, or any static host.
-
-## License
-
-MIT
+This version pins Vite and includes PostCSS in dev dependencies so the CSS startup error does not happen.
