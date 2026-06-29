@@ -1,9 +1,10 @@
 const $ = (selector) => document.querySelector(selector)
 const $$ = (selector) => [...document.querySelectorAll(selector)]
 
-const STORAGE_KEY = 'snowtab-clean-v4'
+const STORAGE_KEY = 'snowtab-v5'
 
 const wallpapers = [
+  ['00-santa-village.svg', 'Santa village'],
   ['01-santa-sleigh.svg', 'Santa sleigh'],
   ['02-north-pole.svg', 'North Pole'],
   ['03-cozy-cabin.svg', 'Cozy cabin'],
@@ -31,8 +32,8 @@ const wallpapers = [
 ]
 
 const defaultState = {
-  theme: 'holly',
-  wallpaper: './wallpapers/01-santa-sleigh.svg',
+  theme: 'village',
+  wallpaper: './wallpapers/00-santa-village.svg',
   customWallpaper: '',
   showClockSeconds: false,
   snow: true,
@@ -61,18 +62,22 @@ let timer = {
   running: false,
   remaining: durationFor('focus'),
   total: durationFor('focus'),
-  intervalId: null,
-  startedAt: null
+  intervalId: null
 }
 let snowflakes = []
 let snowRaf = null
 
+function clone(value) {
+  if (typeof structuredClone === 'function') return structuredClone(value)
+  return JSON.parse(JSON.stringify(value))
+}
+
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
-    return { ...structuredClone(defaultState), ...(saved || {}) }
+    return { ...clone(defaultState), ...(saved || {}) }
   } catch {
-    return structuredClone(defaultState)
+    return clone(defaultState)
   }
 }
 
@@ -107,6 +112,16 @@ function domainFromUrl(url) {
   }
 }
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#039;',
+    '"': '&quot;'
+  }[char]))
+}
+
 function toast(message) {
   const el = $('#toast')
   el.textContent = message
@@ -122,7 +137,7 @@ function updateClock() {
   $('#clock').textContent = now.toLocaleTimeString([], options)
   $('#date-line').textContent = now.toLocaleDateString([], {
     weekday: 'long',
-    month: 'short',
+    month: 'long',
     day: 'numeric'
   })
 }
@@ -133,7 +148,6 @@ function updateCountdown() {
   if (now > christmas) christmas = new Date(now.getFullYear() + 1, 11, 25)
   const days = Math.max(0, Math.ceil((christmas - now) / 86400000))
   $('#countdown-days').textContent = days
-  $('#corner-days').textContent = days
 
   const start = new Date(christmas.getFullYear(), 0, 1)
   const progress = Math.min(100, Math.max(0, ((now - start) / (christmas - start)) * 100))
@@ -162,7 +176,7 @@ function applyPageSettings() {
 function setupLights() {
   const holder = $('#light-string')
   if (holder.children.length) return
-  for (let i = 0; i < 22; i += 1) {
+  for (let i = 0; i < 28; i += 1) {
     holder.appendChild(document.createElement('span'))
   }
 }
@@ -182,14 +196,14 @@ function renderLinks() {
   const wrapper = $('#quick-links')
   wrapper.innerHTML = ''
   state.links.forEach((link, index) => {
+    const domain = domainFromUrl(link.url)
     const card = document.createElement('div')
     card.className = 'link-card'
-    const first = link.name.trim().charAt(0).toUpperCase() || '?'
     card.innerHTML = `
       <a class="link-main" href="${normalizeUrl(link.url)}">
-        <span class="link-icon">${first}</span>
+        <span class="link-icon"><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64" alt="" loading="lazy"></span>
         <span class="link-title">${escapeHtml(link.name)}</span>
-        <span class="link-url">${escapeHtml(domainFromUrl(link.url))}</span>
+        <span class="link-url">${escapeHtml(domain)}</span>
       </a>
       <div class="link-actions">
         <button class="soft-button edit-link-button" type="button" data-index="${index}">Edit</button>
@@ -255,7 +269,7 @@ function renderTodos() {
   $('#todo-count').textContent = `${openCount} open`
 
   if (!filtered.length) {
-    list.innerHTML = `<div class="empty-state">${state.todos.length ? 'Nothing in this filter.' : 'No tasks yet.'}</div>`
+    list.innerHTML = `<div class="empty-state">${state.todos.length ? 'Nothing here.' : 'No tasks yet.'}</div>`
     updateFocusedTask()
     return
   }
@@ -263,7 +277,7 @@ function renderTodos() {
   list.innerHTML = ''
   filtered.forEach((todo) => {
     const item = document.createElement('div')
-    item.className = `todo-item ${todo.done ? 'done' : ''}`
+    item.className = `todo-item ${todo.done ? 'done' : ''} ${state.focusedTodoId === todo.id ? 'focused' : ''}`
     item.innerHTML = `
       <input class="todo-check" type="checkbox" ${todo.done ? 'checked' : ''} aria-label="Mark task done" />
       <span class="todo-text">${escapeHtml(todo.text)}</span>
@@ -279,8 +293,9 @@ function renderTodos() {
     item.querySelector('.todo-focus').addEventListener('click', () => {
       state.focusedTodoId = todo.id
       saveState()
+      renderTodos()
       updateFocusedTask()
-      toast('Task added to timer')
+      toast('Task set for focus')
     })
     item.querySelector('.todo-delete').addEventListener('click', () => {
       state.todos = state.todos.filter((entry) => entry.id !== todo.id)
@@ -303,6 +318,7 @@ function setupTodos() {
     input.value = ''
     state.todoFilter = 'open'
     saveState()
+    $$('.filter-button').forEach((entry) => entry.classList.toggle('active', entry.dataset.filter === 'open'))
     renderTodos()
   })
 
@@ -337,7 +353,6 @@ function setMode(mode) {
   clearInterval(timer.intervalId)
   timer.total = durationFor(mode)
   timer.remaining = timer.total
-  timer.startedAt = null
   $$('.mode-tab').forEach((button) => button.classList.toggle('active', button.dataset.mode === mode))
   $('#timer-mode-title').textContent = mode === 'focus' ? 'Focus' : 'Break'
   renderTimer()
@@ -352,7 +367,7 @@ function renderTimer() {
   $('#start-pause').textContent = timer.running ? 'Pause' : 'Start'
   $('#mini-start').textContent = timer.running ? 'Pause' : 'Start'
   $('#session-pill').textContent = `${state.sessions} session${state.sessions === 1 ? '' : 's'}`
-  const done = 1 - timer.remaining / timer.total
+  const done = timer.total ? 1 - timer.remaining / timer.total : 0
   $('#timer-progress').style.width = `${Math.max(0, Math.min(100, done * 100))}%`
 }
 
@@ -364,7 +379,6 @@ function toggleTimer() {
     return
   }
   timer.running = true
-  timer.startedAt = Date.now()
   timer.intervalId = setInterval(() => {
     timer.remaining -= 1
     if (timer.remaining <= 0) finishTimer()
@@ -410,7 +424,7 @@ function setupSettings() {
     $('#settings-dialog').close()
   })
   $('#reset-settings').addEventListener('click', () => {
-    state = structuredClone(defaultState)
+    state = clone(defaultState)
     saveState()
     applyPageSettings()
     renderLinks()
@@ -492,18 +506,18 @@ function setupSnow() {
   resize()
   window.addEventListener('resize', resize)
 
-  snowflakes = Array.from({ length: 95 }, () => ({
+  snowflakes = Array.from({ length: 80 }, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
-    r: Math.random() * 2.1 + 0.8,
-    s: Math.random() * 0.7 + 0.25,
-    drift: Math.random() * 0.4 - 0.2
+    r: Math.random() * 1.8 + 0.7,
+    s: Math.random() * 0.65 + 0.2,
+    drift: Math.random() * 0.38 - 0.19
   }))
 
   const draw = () => {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
     if (state.snow) {
-      ctx.fillStyle = 'rgba(255,255,255,.72)'
+      ctx.fillStyle = 'rgba(255,255,255,.74)'
       snowflakes.forEach((flake) => {
         flake.y += flake.s
         flake.x += flake.drift
@@ -520,27 +534,21 @@ function setupSnow() {
   if (!snowRaf) draw()
 }
 
-function escapeHtml(value) {
-  return String(value).replace(/[&<>'"]/g, (char) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-  }[char]))
-}
-
-function init() {
+function boot() {
+  renderWallpaperGrid()
+  applyPageSettings()
   setupSearch()
   setupLinks()
   setupTodos()
   setupTimer()
   setupSettings()
-  renderWallpaperGrid()
-  applyPageSettings()
   renderLinks()
   renderTodos()
   setMode('focus')
-  updateCountdown()
   updateClock()
+  updateCountdown()
   setInterval(updateClock, 1000)
   setInterval(updateCountdown, 60000)
 }
 
-init()
+boot()
