@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#102f28" />
+    <meta name="theme-color" content="#12315a" />
     <title>SnowTab</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="./src/styles.css" />
@@ -13,127 +13,110 @@
     <div id="light-string" class="light-string" aria-hidden="true"></div>
 
     <main class="page-shell">
-      <header class="top-panel glass-card">
-        <a class="brand" href="./" aria-label="SnowTab home">
-          <span class="brand-icon" aria-hidden="true"></span>
-          <span>
-            <strong>SnowTab</strong>
-            <small>focus homepage</small>
-          </span>
+      <nav class="top-nav" aria-label="SnowTab controls">
+        <a class="wordmark" href="./" aria-label="SnowTab home">
+          <span class="wordmark-mark" aria-hidden="true"></span>
+          <span>SnowTab</span>
         </a>
+        <button id="settings-open" class="settings-open" type="button">Settings</button>
+      </nav>
+
+      <section class="hero glass-card" aria-label="Homepage tools">
+        <div class="hero-left">
+          <p class="small-label">Focus homepage</p>
+          <section class="clock-tile" aria-live="polite">
+            <span id="clock">00:00</span>
+            <small id="date-line">Loading date</small>
+          </section>
+        </div>
+
+        <div class="hero-right">
+          <section class="countdown-tile" aria-live="polite">
+            <small>Christmas</small>
+            <strong><span id="countdown-days">...</span> days</strong>
+            <div class="mini-progress" aria-hidden="true"><span id="countdown-fill"></span></div>
+          </section>
+          <section class="mini-timer" aria-live="polite">
+            <small id="mini-timer-label">Focus</small>
+            <strong id="mini-timer-time">25:00</strong>
+            <button id="mini-start" type="button">Start</button>
+          </section>
+        </div>
 
         <form id="search-form" class="search-box" autocomplete="off">
           <label class="sr-only" for="search-input">Search the web</label>
           <input id="search-input" type="search" placeholder="Search or paste a URL" />
           <button type="submit">Search</button>
         </form>
+      </section>
 
-        <section class="clock-tile" aria-live="polite">
-          <span id="clock">00:00</span>
-          <small id="date-line">Loading date</small>
-        </section>
-
-        <section class="mini-tile countdown-tile" aria-live="polite">
-          <small>Christmas</small>
-          <strong><span id="countdown-days">...</span> days</strong>
-          <div class="mini-progress"><span id="countdown-fill"></span></div>
-        </section>
-
-        <section class="mini-tile mini-timer" aria-live="polite">
-          <small id="mini-timer-label">Focus</small>
-          <strong id="mini-timer-time">25:00</strong>
-          <button id="mini-start" type="button">Start</button>
-        </section>
-
-        <button id="settings-open" class="settings-open" type="button">Settings</button>
-      </header>
-
-      <section class="content-grid">
-        <section class="left-column">
-          <article class="glass-card card quick-card">
-            <div class="card-heading">
-              <div>
-                <p class="eyebrow">Launch pad</p>
-                <h1>Quick links</h1>
-              </div>
-              <button id="add-link" class="soft-button" type="button">Add link</button>
-            </div>
-            <div id="quick-links" class="quick-links" aria-live="polite"></div>
-          </article>
-
-          <article class="glass-card card todo-card">
-            <div class="card-heading">
-              <div>
-                <p class="eyebrow">Tasks</p>
-                <h2>Todo list</h2>
-              </div>
-              <span id="todo-count" class="status-pill">0 open</span>
-            </div>
-
-            <form id="todo-form" class="todo-form" autocomplete="off">
-              <label class="sr-only" for="todo-input">Add a task</label>
-              <input id="todo-input" maxlength="90" placeholder="Add a task" />
-              <button type="submit" class="primary-button">Add</button>
-            </form>
-
-            <div class="todo-tools" aria-label="Todo filters">
-              <button class="filter-button active" data-filter="open" type="button">Open</button>
-              <button class="filter-button" data-filter="all" type="button">All</button>
-              <button class="filter-button" data-filter="done" type="button">Done</button>
-              <button id="clear-done" class="soft-button small" type="button">Clear done</button>
-            </div>
-
-            <div id="todo-list" class="todo-list" aria-live="polite"></div>
-          </article>
-        </section>
-
-        <aside class="right-column">
-          <article class="glass-card card timer-card">
-            <div class="card-heading timer-heading">
-              <div>
-                <p class="eyebrow">Pomodoro</p>
-                <h2 id="timer-mode-title">Focus</h2>
-              </div>
-              <span id="session-pill" class="status-pill">0 sessions</span>
-            </div>
-
-            <div class="task-chip">
-              <span>Current task</span>
-              <strong id="current-task-title">No task selected</strong>
-            </div>
-
-            <div class="timer-display-wrap">
-              <div class="timer-display" id="timer-display">25:00</div>
-              <div class="timer-status" id="timer-subtitle">Ready</div>
-              <div class="timer-bar" aria-hidden="true"><span id="timer-progress"></span></div>
-            </div>
-
-            <div class="mode-tabs" aria-label="Timer modes">
-              <button class="mode-tab active" data-mode="focus" type="button">Focus</button>
-              <button class="mode-tab" data-mode="break" type="button">Break</button>
-            </div>
-
-            <div class="timer-controls">
-              <button id="start-pause" class="primary-button" type="button">Start</button>
-              <button id="reset-timer" class="soft-button" type="button">Reset</button>
-            </div>
-          </article>
-
-          <article class="glass-card card christmas-card">
+      <section class="workspace-grid">
+        <article class="glass-card card quick-card">
+          <div class="card-heading">
             <div>
-              <p class="eyebrow">Christmas corner</p>
-              <h2><span id="corner-days">...</span> sleeps left</h2>
-              <p>Pick a wallpaper in settings if this one is not your vibe.</p>
+              <p class="eyebrow">Launch pad</p>
+              <h1>Quick links</h1>
             </div>
-            <div class="christmas-scene" aria-hidden="true">
-              <span class="scene-moon"></span>
-              <span class="scene-tree"></span>
-              <span class="scene-santa"></span>
-              <span class="scene-gift one"></span>
-              <span class="scene-gift two"></span>
+            <button id="add-link" class="soft-button" type="button">Add link</button>
+          </div>
+          <div id="quick-links" class="quick-links" aria-live="polite"></div>
+        </article>
+
+        <article class="glass-card card timer-card">
+          <div class="card-heading timer-heading">
+            <div>
+              <p class="eyebrow">Pomodoro</p>
+              <h2 id="timer-mode-title">Focus</h2>
             </div>
-          </article>
-        </aside>
+            <span id="session-pill" class="status-pill">0 sessions</span>
+          </div>
+
+          <div class="task-chip">
+            <span>Current task</span>
+            <strong id="current-task-title">No task selected</strong>
+          </div>
+
+          <div class="timer-display-wrap">
+            <div class="timer-display" id="timer-display">25:00</div>
+            <div class="timer-status" id="timer-subtitle">Ready</div>
+            <div class="timer-bar" aria-hidden="true"><span id="timer-progress"></span></div>
+          </div>
+
+          <div class="mode-tabs" aria-label="Timer modes">
+            <button class="mode-tab active" data-mode="focus" type="button">Focus</button>
+            <button class="mode-tab" data-mode="break" type="button">Break</button>
+          </div>
+
+          <div class="timer-controls">
+            <button id="start-pause" class="primary-button" type="button">Start</button>
+            <button id="reset-timer" class="soft-button" type="button">Reset</button>
+          </div>
+        </article>
+
+        <article class="glass-card card todo-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">Tasks</p>
+              <h2>Todo list</h2>
+            </div>
+            <span id="todo-count" class="status-pill">0 open</span>
+          </div>
+
+          <form id="todo-form" class="todo-form" autocomplete="off">
+            <label class="sr-only" for="todo-input">Add a task</label>
+            <input id="todo-input" maxlength="90" placeholder="Add a task" />
+            <button type="submit" class="primary-button">Add</button>
+          </form>
+
+          <div class="todo-tools" aria-label="Todo filters">
+            <button class="filter-button active" data-filter="open" type="button">Open</button>
+            <button class="filter-button" data-filter="all" type="button">All</button>
+            <button class="filter-button" data-filter="done" type="button">Done</button>
+            <button id="clear-done" class="soft-button small" type="button">Clear done</button>
+          </div>
+
+          <div id="todo-list" class="todo-list" aria-live="polite"></div>
+        </article>
       </section>
     </main>
 
@@ -142,7 +125,7 @@
         <div class="dialog-heading">
           <div>
             <p class="eyebrow">Settings</p>
-            <h2>Make it yours</h2>
+            <h2>SnowTab</h2>
           </div>
           <button id="settings-close" type="button" class="icon-button" aria-label="Close settings">×</button>
         </div>
@@ -150,7 +133,7 @@
         <section class="settings-section">
           <h3>Theme</h3>
           <div class="theme-grid">
-            <button class="theme-tile" data-theme-button="holly" type="button"><span></span>Holly</button>
+            <button class="theme-tile" data-theme-button="village" type="button"><span></span>Village</button>
             <button class="theme-tile" data-theme-button="frost" type="button"><span></span>Frost</button>
             <button class="theme-tile" data-theme-button="cocoa" type="button"><span></span>Cocoa</button>
             <button class="theme-tile" data-theme-button="candy" type="button"><span></span>Candy</button>
@@ -160,7 +143,7 @@
         <section class="settings-section">
           <h3>Wallpaper</h3>
           <div class="wallpaper-actions">
-            <button id="random-wallpaper" type="button" class="soft-button">Random wallpaper</button>
+            <button id="random-wallpaper" type="button" class="soft-button">Random</button>
             <label class="custom-wallpaper">Custom image URL
               <input id="custom-wallpaper-url" type="url" placeholder="https://..." />
             </label>
@@ -188,7 +171,7 @@
         </section>
 
         <div class="dialog-actions">
-          <button id="reset-settings" type="button" class="soft-button">Reset settings</button>
+          <button id="reset-settings" type="button" class="soft-button">Reset</button>
           <button id="settings-save" type="button" class="primary-button">Done</button>
         </div>
       </form>
