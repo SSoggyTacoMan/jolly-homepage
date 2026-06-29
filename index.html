@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#142f24" />
+    <meta name="theme-color" content="#172f22" />
     <title>SnowTab</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,16 +18,17 @@
       <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
 
-    <div class="corner-decor left" aria-hidden="true">
-      <span class="holly-leaf leaf-a"></span>
-      <span class="holly-leaf leaf-b"></span>
-      <span class="berry berry-a"></span>
-      <span class="berry berry-b"></span>
-      <span class="berry berry-c"></span>
+    <div class="corner-decor corner-left" aria-hidden="true">
+      <span class="holly-leaf leaf-one"></span>
+      <span class="holly-leaf leaf-two"></span>
+      <span class="berry berry-one"></span>
+      <span class="berry berry-two"></span>
+      <span class="berry berry-three"></span>
     </div>
-    <div class="corner-decor right" aria-hidden="true">
-      <span class="candy-cane-big"></span>
-      <span class="small-present"></span>
+
+    <div class="corner-decor corner-right" aria-hidden="true">
+      <span class="candy-cane"></span>
+      <span class="hanging-ornament"></span>
     </div>
 
     <main class="app-shell">
@@ -40,6 +41,12 @@
           </div>
         </div>
 
+        <form id="search-form" class="search-box" autocomplete="off">
+          <label class="sr-only" for="search-input">Search the web</label>
+          <input id="search-input" type="search" placeholder="Search or paste a URL" />
+          <button type="submit">Search</button>
+        </form>
+
         <div class="top-clock" aria-live="polite">
           <strong id="clock">00:00</strong>
           <span id="date-line">Loading date</span>
@@ -48,53 +55,8 @@
         <button id="settings-open" class="settings-open" type="button">Settings</button>
       </header>
 
-      <section class="hero-grid">
-        <article class="search-card glass-card">
-          <form id="search-form" class="search-box" autocomplete="off">
-            <label class="sr-only" for="search-input">Search the web</label>
-            <input id="search-input" type="search" placeholder="Search or paste a URL" />
-            <button type="submit">Search</button>
-          </form>
-
-          <div class="countdown-panel">
-            <div>
-              <span class="panel-label">Christmas countdown</span>
-              <div class="countdown-row">
-                <strong id="countdown-days">...</strong>
-                <span id="countdown-label">days to Christmas</span>
-              </div>
-            </div>
-            <div class="countdown-meter" aria-hidden="true">
-              <div class="countdown-track"><span id="countdown-fill"></span></div>
-              <div class="ornament-row" id="ornament-row"></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="scene-card glass-card" aria-label="Christmas decoration">
-          <div class="mantel">
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
-          <div class="christmas-tree" aria-hidden="true">
-            <span class="tree-star"></span>
-            <span class="tree-layer layer-one"></span>
-            <span class="tree-layer layer-two"></span>
-            <span class="tree-layer layer-three"></span>
-            <span class="tree-trunk"></span>
-            <span class="tree-ball ball-one"></span>
-            <span class="tree-ball ball-two"></span>
-            <span class="tree-ball ball-three"></span>
-          </div>
-          <div class="gift-row" aria-hidden="true">
-            <span class="gift gift-red"></span>
-            <span class="gift gift-gold"></span>
-            <span class="gift gift-green"></span>
-          </div>
-        </article>
-      </section>
-
-      <section class="main-grid">
-        <article class="glass-card links-card order-one">
+      <section class="dashboard-grid">
+        <article class="glass-card launch-card">
           <div class="section-heading compact-heading">
             <div>
               <p class="eyebrow">Launch pad</p>
@@ -105,7 +67,32 @@
           <div id="quick-links" class="quick-links" aria-live="polite"></div>
         </article>
 
-        <article class="glass-card timer-card order-two">
+        <article class="glass-card countdown-card">
+          <div class="countdown-content">
+            <p class="eyebrow">Christmas countdown</p>
+            <div class="countdown-row">
+              <strong id="countdown-days">...</strong>
+              <span id="countdown-label">sleeps left</span>
+            </div>
+            <div class="countdown-track" aria-hidden="true"><span id="countdown-fill"></span></div>
+            <div class="ornament-row" id="ornament-row" aria-hidden="true"></div>
+          </div>
+          <div class="mini-scene" aria-hidden="true">
+            <div class="mini-tree">
+              <span class="star"></span>
+              <span class="tree-layer layer-a"></span>
+              <span class="tree-layer layer-b"></span>
+              <span class="tree-layer layer-c"></span>
+              <span class="tree-trunk"></span>
+              <span class="tree-ball ball-a"></span>
+              <span class="tree-ball ball-b"></span>
+              <span class="tree-ball ball-c"></span>
+            </div>
+            <div class="gift-line"><span></span><span></span><span></span></div>
+          </div>
+        </article>
+
+        <article class="glass-card timer-card">
           <div class="section-heading">
             <div>
               <p class="eyebrow">Pomodoro</p>
@@ -114,9 +101,15 @@
             <span id="session-pill" class="pill">0 sessions</span>
           </div>
 
+          <div class="current-task-box">
+            <span class="strip-label">Current task</span>
+            <strong id="current-task-title">No task selected</strong>
+            <span id="current-task-meta">Pick one from your task list or type a custom sprint.</span>
+          </div>
+
           <label class="focus-goal-label" for="focus-goal">
-            Sprint goal
-            <input id="focus-goal" maxlength="90" placeholder="Pick a task or type one thing to finish">
+            Custom sprint
+            <input id="focus-goal" maxlength="90" placeholder="Optional quick goal">
           </label>
 
           <div class="timer-ring" aria-live="polite">
@@ -127,63 +120,88 @@
             <div class="timer-readout">
               <span id="timer-display">25:00</span>
               <small id="timer-subtitle">Ready</small>
-              <small id="timer-end" class="timer-end">End time appears after start</small>
+              <small id="timer-end" class="timer-end">Not running</small>
             </div>
           </div>
 
-          <div class="timer-status-row">
-            <div class="study-strip">
-              <span class="strip-label">Current sprint</span>
-              <strong id="quest-text">No sprint selected.</strong>
-            </div>
-            <div class="round-box">
-              <span class="strip-label">Long break</span>
-              <div class="round-dots" id="round-dots" aria-label="Rounds until long break"></div>
-            </div>
+          <div class="mode-tabs" role="tablist" aria-label="Timer modes">
+            <button class="mode-tab active" data-mode="focus" type="button">Focus</button>
+            <button class="mode-tab" data-mode="short" type="button">Short break</button>
+            <button class="mode-tab" data-mode="long" type="button">Long break</button>
           </div>
 
           <div class="timer-controls primary-controls">
-            <button id="start-pause" class="primary-button">Start focus</button>
-            <button id="reset-timer" class="soft-button">Reset</button>
-            <button id="skip-mode" class="soft-button">Skip</button>
-            <button id="mark-current-done" class="soft-button">Mark task done</button>
+            <button id="start-pause" class="primary-button" type="button">Start</button>
+            <button id="reset-timer" class="soft-button" type="button">Reset</button>
+            <button id="finish-early" class="soft-button" type="button">Finish focus</button>
           </div>
 
           <div class="timer-controls small-controls">
-            <button id="add-five" class="soft-button small-button">+5 min</button>
-            <button id="sub-one" class="soft-button small-button">-1 min</button>
+            <button id="add-five" class="soft-button small-button" type="button">+5 min</button>
+            <button id="sub-one" class="soft-button small-button" type="button">-1 min</button>
             <button class="preset-button" data-preset="classic" type="button">25 / 5</button>
             <button class="preset-button" data-preset="deep" type="button">50 / 10</button>
             <button class="preset-button" data-preset="quick" type="button">15 / 5</button>
           </div>
 
-          <div class="mode-tabs" role="tablist" aria-label="Timer modes">
-            <button class="mode-tab active" data-mode="focus">Focus</button>
-            <button class="mode-tab" data-mode="short">Short break</button>
-            <button class="mode-tab" data-mode="long">Long break</button>
+          <div class="timer-status-row">
+            <div class="study-strip">
+              <span class="strip-label">Next break</span>
+              <strong id="next-break-label">Short break after this focus.</strong>
+            </div>
+            <div class="round-box">
+              <span class="strip-label">Long break progress</span>
+              <div class="round-dots" id="round-dots" aria-label="Rounds until long break"></div>
+            </div>
           </div>
         </article>
 
-        <article class="glass-card todo-card order-three">
+        <article class="glass-card todo-card">
           <div class="section-heading compact-heading">
             <div>
-              <p class="eyebrow">Todo</p>
+              <p class="eyebrow">Tasks</p>
               <h2>Study list</h2>
             </div>
-            <span id="todo-count" class="pill">0 left</span>
+            <span id="todo-count" class="pill">0 open</span>
           </div>
 
           <form id="todo-form" class="todo-form" autocomplete="off">
-            <label class="sr-only" for="todo-input">Add todo</label>
+            <label class="sr-only" for="todo-input">Add task</label>
             <input id="todo-input" maxlength="90" placeholder="Add a task">
+            <select id="todo-priority" aria-label="Task priority">
+              <option value="normal">Normal</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+            <select id="todo-estimate" aria-label="Pomodoro estimate">
+              <option value="1">1 sprint</option>
+              <option value="2">2 sprints</option>
+              <option value="3">3 sprints</option>
+              <option value="5">5 sprints</option>
+            </select>
             <button type="submit" class="primary-button">Add</button>
           </form>
+
+          <div class="task-tools">
+            <button id="pick-next-task" class="soft-button small-button" type="button">Pick next</button>
+            <button class="filter-button active" data-filter="open" type="button">Open</button>
+            <button class="filter-button" data-filter="all" type="button">All</button>
+            <button class="filter-button" data-filter="done" type="button">Done</button>
+          </div>
+
+          <div class="todo-progress-panel">
+            <div>
+              <span class="strip-label">Progress</span>
+              <strong id="task-progress-text">No tasks yet</strong>
+            </div>
+            <div class="task-progress-track" aria-hidden="true"><span id="task-progress-fill"></span></div>
+          </div>
 
           <div id="todo-list" class="todo-list" aria-live="polite"></div>
 
           <div class="todo-footer">
-            <button id="clear-done" class="soft-button small-button">Clear done</button>
-            <button id="reset-todos" class="soft-button small-button">Reset list</button>
+            <button id="clear-done" class="soft-button small-button" type="button">Clear done</button>
+            <button id="reset-todos" class="soft-button small-button" type="button">Reset list</button>
           </div>
         </article>
       </section>
@@ -194,7 +212,7 @@
         <div class="dialog-heading">
           <div>
             <p class="eyebrow">Settings</p>
-            <h2>Make SnowTab yours</h2>
+            <h2>SnowTab settings</h2>
           </div>
           <button type="button" id="settings-close" class="icon-button" aria-label="Close settings">×</button>
         </div>
@@ -224,13 +242,10 @@
         <section class="settings-section">
           <h3>Timer behavior</h3>
           <div class="settings-grid">
-            <label>
-              Long break after
-              <input id="long-break-every" type="number" min="2" max="12" value="4">
-            </label>
-            <label class="toggle-label"><input id="auto-start-toggle" type="checkbox"> Auto start next timer</label>
+            <label>Long break after<input id="long-break-every" type="number" min="2" max="12" value="4"></label>
             <label class="toggle-label"><input id="auto-switch-toggle" type="checkbox" checked> Auto pick next mode</label>
-            <label class="toggle-label"><input id="complete-task-toggle" type="checkbox"> Finish selected task after focus</label>
+            <label class="toggle-label"><input id="auto-start-toggle" type="checkbox"> Auto start next timer</label>
+            <label class="toggle-label"><input id="complete-task-toggle" type="checkbox"> Mark task done when its sprint goal is reached</label>
             <label class="toggle-label"><input id="sound-toggle" type="checkbox" checked> Sound alert</label>
             <label class="toggle-label"><input id="notify-toggle" type="checkbox"> Browser notification</label>
           </div>
