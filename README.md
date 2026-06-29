@@ -1,20 +1,24 @@
 # SnowTab
 
-A jolly browser homepage with a Pomodoro timer, editable quick links, themes, snow, a Christmas countdown, and saved settings.
+A jolly browser homepage made for studying. It has a Pomodoro timer, editable quick links, a todo list, Christmas visuals, themes, snow, a countdown, and saved settings.
 
 ## Features
 
 - Live clock and date
 - Web search bar
 - Editable quick links
-- Pomodoro timer with focus, short break, and long break modes
+- Study-focused Pomodoro timer
+- Focus, short break, and long break modes
 - Custom timer lengths
-- Session counter for today
+- Current sprint goal input
+- Todo list with localStorage saving
+- Turn a todo into the current Pomodoro goal
+- Focus session counter
+- Progress dots until the next long break
 - Christmas countdown
-- Daily jolly message
 - Frost, cocoa, and aurora themes
-- Soft snow animation
-- Saves links, theme, timer settings, and session count with localStorage
+- Animated snow, glowing lights, present shapes, and ornament styling
+- Saves links, todos, theme, timer settings, and focus goal with localStorage
 
 ## Run locally
 
