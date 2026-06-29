@@ -19,6 +19,8 @@ const presets = {
 const themes = ['holly', 'candy', 'cocoa', 'frost']
 const priorityRank = { high: 3, normal: 2, low: 1 }
 const priorityLabels = { high: 'High', normal: 'Normal', low: 'Low' }
+const dueLabels = { anytime: 'Anytime', today: 'Today', tomorrow: 'Tomorrow', week: 'This week' }
+const dueRank = { today: 4, tomorrow: 3, week: 2, anytime: 1 }
 
 const els = {
   clock: document.querySelector('#clock'),
@@ -51,6 +53,9 @@ const els = {
   todoInput: document.querySelector('#todo-input'),
   todoPriority: document.querySelector('#todo-priority'),
   todoEstimate: document.querySelector('#todo-estimate'),
+  todoDue: document.querySelector('#todo-due'),
+  taskSearch: document.querySelector('#task-search'),
+  taskSort: document.querySelector('#task-sort'),
   todoList: document.querySelector('#todo-list'),
   todoCount: document.querySelector('#todo-count'),
   taskProgressText: document.querySelector('#task-progress-text'),
@@ -105,6 +110,8 @@ function defaultState() {
     tasks: [],
     selectedTaskId: null,
     taskFilter: 'open',
+    taskSearch: '',
+    taskSort: 'manual',
     focusGoal: '',
     durations: { focus: 25 * 60, short: 5 * 60, long: 15 * 60 },
     longBreakEvery: 4,
@@ -145,6 +152,8 @@ function loadState() {
     merged.tasks = sanitizeTasks(rawTasks)
     merged.selectedTaskId = merged.selectedTaskId || saved.selectedTodoId || null
     merged.taskFilter = ['open', 'all', 'done'].includes(merged.taskFilter) ? merged.taskFilter : 'open'
+    merged.taskSearch = String(merged.taskSearch || '').slice(0, 90)
+    merged.taskSort = ['manual', 'priority', 'progress', 'created'].includes(merged.taskSort) ? merged.taskSort : 'manual'
     merged.focusGoal = String(merged.focusGoal || '').slice(0, 90)
     merged.durations = normalizeDurations(saved.durations || fallback.durations)
     merged.longBreakEvery = clampNumber(merged.longBreakEvery, 2, 12, 4)
@@ -205,11 +214,13 @@ function sanitizeTasks(tasks) {
       const estimate = clampNumber(task.estimate || task.estimateRounds || 1, 1, 12, 1)
       const rounds = clampNumber(task.rounds || task.sessions || task.completedRounds || 0, 0, 99, 0)
       const priority = ['high', 'normal', 'low'].includes(task.priority) ? task.priority : 'normal'
+      const due = ['anytime', 'today', 'tomorrow', 'week'].includes(task.due) ? task.due : 'anytime'
       return {
         id: task.id || makeId(),
         title: String(task.title || task.text).slice(0, 90),
         done: Boolean(task.done),
         priority,
+        due,
         estimate,
         rounds,
         createdAt: task.createdAt || Date.now(),
@@ -394,14 +405,15 @@ function formatTime(totalSeconds) {
 function renderTimer() {
   els.timerDisplay.textContent = formatTime(timer.remaining)
   els.startPause.textContent = timer.running ? 'Pause' : timer.mode === 'focus' ? 'Start focus' : 'Start break'
-  els.finishEarly.textContent = timer.mode === 'focus' ? 'Finish focus' : 'End break'
+  els.resetTimer.textContent = 'Restart'
+  els.finishEarly.textContent = timer.mode === 'focus' ? 'Log sprint' : 'Skip break'
 
   const progress = timer.total === 0 ? 0 : 1 - timer.remaining / timer.total
   const circumference = 2 * Math.PI * 98
   els.timerProgress.style.strokeDasharray = `${circumference}`
   els.timerProgress.style.strokeDashoffset = `${circumference * (1 - progress)}`
 
-  els.timerSubtitle.textContent = timer.running ? 'Running' : timer.mode === 'focus' ? 'Ready to focus' : 'Ready for break'
+  els.timerSubtitle.textContent = timer.running ? 'Running' : timer.mode === 'focus' ? 'Ready' : 'Break ready'
   document.body.classList.toggle('focus-running', timer.running && timer.mode === 'focus')
   updateTimerEnd()
   document.title = timer.running ? `${formatTime(timer.remaining)} · SnowTab` : 'SnowTab'
@@ -456,9 +468,9 @@ function finishTimer(manual) {
 
   if (timer.mode === 'focus') {
     completeFocusRound()
-    showToast(manual ? 'Focus logged' : 'Focus finished')
+    showToast(manual ? 'Sprint logged' : 'Sprint finished')
   } else {
-    showToast(manual ? 'Break ended' : 'Break finished')
+    showToast(manual ? 'Break skipped' : 'Break finished')
   }
 
   const nextMode = nextTimerMode()
@@ -575,7 +587,7 @@ function renderCurrentTask() {
 
   if (task && !task.done) {
     els.currentTaskTitle.textContent = task.title
-    els.currentTaskMeta.textContent = `${priorityLabels[task.priority]} priority · ${task.rounds}/${task.estimate} sprint${task.estimate === 1 ? '' : 's'}`
+    els.currentTaskMeta.textContent = `${priorityLabels[task.priority]} priority · ${dueLabels[task.due] || 'Anytime'} · ${task.rounds}/${task.estimate} sprint${task.estimate === 1 ? '' : 's'}`
     return
   }
 
@@ -645,6 +657,7 @@ function addTask(event) {
     title,
     done: false,
     priority: els.todoPriority.value,
+    due: els.todoDue.value,
     estimate: clampNumber(els.todoEstimate.value, 1, 12, 1),
     rounds: 0,
     createdAt: Date.now(),
@@ -654,6 +667,7 @@ function addTask(event) {
   els.todoInput.value = ''
   els.todoPriority.value = 'normal'
   els.todoEstimate.value = '1'
+  els.todoDue.value = 'anytime'
   saveState()
   renderTasks()
   showToast('Task added')
@@ -669,20 +683,26 @@ function renderTasks() {
   const progress = total ? Math.round((done / total) * 100) : 0
 
   els.todoCount.textContent = `${open} open`
-  els.taskProgressText.textContent = total ? `${done}/${total} done` : 'No tasks yet'
+  els.taskProgressText.textContent = total ? `${done}/${total} done · ${open} left` : 'No tasks yet'
   els.taskProgressFill.style.width = `${progress}%`
   els.filterButtons.forEach(button => button.classList.toggle('active', button.dataset.filter === state.taskFilter))
+  if (els.taskSearch) els.taskSearch.value = state.taskSearch || ''
+  if (els.taskSort) els.taskSort.value = state.taskSort || 'manual'
 
-  const visible = state.tasks.filter(task => {
-    if (state.taskFilter === 'done') return task.done
-    if (state.taskFilter === 'open') return !task.done
+  const query = (state.taskSearch || '').toLowerCase().trim()
+  let visible = state.tasks.filter(task => {
+    if (state.taskFilter === 'done' && !task.done) return false
+    if (state.taskFilter === 'open' && task.done) return false
+    if (query && !task.title.toLowerCase().includes(query)) return false
     return true
   })
+
+  visible = sortVisibleTasks(visible)
 
   if (visible.length === 0) {
     const empty = document.createElement('p')
     empty.className = 'empty-state'
-    empty.textContent = state.taskFilter === 'done' ? 'No finished tasks yet.' : state.taskFilter === 'all' ? 'No tasks yet.' : 'No open tasks.'
+    empty.textContent = query ? 'No tasks match that filter.' : state.taskFilter === 'done' ? 'No finished tasks yet.' : state.taskFilter === 'all' ? 'No tasks yet.' : 'No open tasks.'
     els.todoList.append(empty)
     return
   }
@@ -705,14 +725,19 @@ function renderTasks() {
 
     const body = document.createElement('div')
     body.className = 'todo-body'
+
     const title = document.createElement('strong')
     title.textContent = task.title
+
     const meta = document.createElement('div')
     meta.className = 'todo-meta'
 
     const priority = document.createElement('span')
     priority.className = `priority-tag priority-${task.priority}`
     priority.textContent = priorityLabels[task.priority]
+
+    const due = document.createElement('span')
+    due.textContent = dueLabels[task.due] || 'Anytime'
 
     const rounds = document.createElement('span')
     rounds.textContent = `${task.rounds}/${task.estimate} sprint${task.estimate === 1 ? '' : 's'}`
@@ -721,22 +746,52 @@ function renderTasks() {
     selected.textContent = task.id === selectedTaskId ? 'Selected' : ''
     if (!selected.textContent) selected.hidden = true
 
-    meta.append(priority, rounds, selected)
-    body.append(title, meta)
+    meta.append(priority, due, rounds, selected)
+
+    const miniProgress = document.createElement('div')
+    miniProgress.className = 'task-mini-progress'
+    miniProgress.setAttribute('aria-hidden', 'true')
+    const miniFill = document.createElement('span')
+    miniFill.style.width = `${Math.min(100, Math.round((task.rounds / task.estimate) * 100))}%`
+    miniProgress.append(miniFill)
 
     const actions = document.createElement('div')
     actions.className = 'task-actions'
 
-    const focus = makeTaskButton(task.id === selectedTaskId ? 'Selected' : 'Focus', () => selectTask(task.id), task.done)
-    const plus = makeTaskButton('+1', () => addRoundToTask(task.id), task.done)
+    const focus = makeTaskButton(task.id === selectedTaskId ? 'Selected' : 'Start', () => selectTask(task.id), task.done)
+    const plus = makeTaskButton('+ sprint', () => addRoundToTask(task.id), task.done)
     const edit = makeTaskButton('Edit', () => editTask(task.id), false)
-    const up = makeTaskButton('Up', () => moveTask(task.id, -1), false)
-    const down = makeTaskButton('Down', () => moveTask(task.id, 1), false)
+    const up = makeTaskButton('↑', () => moveTask(task.id, -1), state.taskSort !== 'manual')
+    const down = makeTaskButton('↓', () => moveTask(task.id, 1), state.taskSort !== 'manual')
     const remove = makeTaskButton('Delete', () => removeTask(task.id), false, 'danger-text')
 
     actions.append(focus, plus, edit, up, down, remove)
-    item.append(check, body, actions)
+    body.append(title, meta, miniProgress, actions)
+    item.append(check, body)
     els.todoList.append(item)
+  })
+}
+
+function sortVisibleTasks(tasks) {
+  const mode = state.taskSort || 'manual'
+  if (mode === 'manual') return [...tasks]
+
+  return [...tasks].sort((a, b) => {
+    if (a.done !== b.done) return Number(a.done) - Number(b.done)
+    if (mode === 'priority') {
+      const priorityDiff = priorityRank[b.priority] - priorityRank[a.priority]
+      if (priorityDiff) return priorityDiff
+      const dueDiff = dueRank[b.due] - dueRank[a.due]
+      if (dueDiff) return dueDiff
+      return a.createdAt - b.createdAt
+    }
+    if (mode === 'progress') {
+      const aProgress = a.rounds / Math.max(1, a.estimate)
+      const bProgress = b.rounds / Math.max(1, b.estimate)
+      return aProgress - bProgress
+    }
+    if (mode === 'created') return b.createdAt - a.createdAt
+    return 0
   })
 }
 
@@ -788,11 +843,25 @@ function addRoundToTask(id) {
 function editTask(id) {
   const task = state.tasks.find(item => item.id === id)
   if (!task) return
-  const nextTitle = window.prompt('Edit task', task.title)
+
+  const nextTitle = window.prompt('Edit task name', task.title)
   if (nextTitle === null) return
   const clean = nextTitle.trim().slice(0, 90)
   if (!clean) return
+
+  const nextEstimate = window.prompt('Sprint estimate', String(task.estimate))
+  if (nextEstimate === null) return
+
+  const nextPriority = window.prompt('Priority: high, normal, or low', task.priority)
+  if (nextPriority === null) return
+
+  const nextDue = window.prompt('Due: today, tomorrow, week, or anytime', task.due)
+  if (nextDue === null) return
+
   task.title = clean
+  task.estimate = clampNumber(nextEstimate, 1, 12, task.estimate)
+  task.priority = ['high', 'normal', 'low'].includes(nextPriority.trim()) ? nextPriority.trim() : task.priority
+  task.due = ['today', 'tomorrow', 'week', 'anytime'].includes(nextDue.trim()) ? nextDue.trim() : task.due
   saveState()
   renderTasks()
   renderCurrentTask()
@@ -850,6 +919,19 @@ function resetTaskList() {
   renderTasks()
   renderCurrentTask()
   showToast('Task list reset')
+}
+
+
+function updateTaskSearch() {
+  state.taskSearch = els.taskSearch.value.trim().slice(0, 90)
+  saveState()
+  renderTasks()
+}
+
+function updateTaskSort() {
+  state.taskSort = els.taskSort.value
+  saveState()
+  renderTasks()
 }
 
 function setTaskFilter(filter) {
@@ -1055,6 +1137,8 @@ function bindEvents() {
   els.subOne.addEventListener('click', () => adjustTimer(-60))
   els.focusGoal.addEventListener('input', updateFocusGoal)
   els.todoForm.addEventListener('submit', addTask)
+  els.taskSearch.addEventListener('input', updateTaskSearch)
+  els.taskSort.addEventListener('change', updateTaskSort)
   els.pickNextTask.addEventListener('click', pickNextTask)
   els.clearDone.addEventListener('click', clearDoneTasks)
   els.resetTodos.addEventListener('click', resetTaskList)
