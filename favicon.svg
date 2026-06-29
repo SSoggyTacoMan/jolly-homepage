@@ -1,16 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fff1b7"/>
-      <stop offset=".48" stop-color="#ff7b72"/>
-      <stop offset="1" stop-color="#7beaab"/>
+      <stop offset="0%" stop-color="#FF5D5D"/>
+      <stop offset="100%" stop-color="#C81D25"/>
+    </linearGradient>
+    <linearGradient id="tree" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2DC653"/>
+      <stop offset="100%" stop-color="#208B3A"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="18" fill="url(#bg)"/>
-  <path d="M13 32 32 16l19 16" fill="none" stroke="#123b32" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M17 31c5 4 9 1 15 1s10 3 15-1" fill="none" stroke="#fff8e9" stroke-width="5" stroke-linecap="round"/>
-  <rect x="16" y="30" width="32" height="23" rx="7" fill="#fff2c9" stroke="#123b32" stroke-width="2"/>
-  <rect x="28" y="39" width="8" height="14" rx="3" fill="#2f705f"/>
-  <circle cx="40" cy="41" r="4" fill="none" stroke="#29af67" stroke-width="3"/>
-  <path d="M43 17h7v15" fill="none" stroke="#ffe071" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  
+  <!-- Snow on the ground -->
+  <path d="M 0 54 Q 16 46 32 50 T 64 54 L 64 64 L 0 64 Z" fill="#FFFFFF" opacity="0.95"/>
+  
+  <!-- Tree Trunk -->
+  <rect x="29" y="46" width="6" height="8" fill="#5E3023" rx="1"/>
+  
+  <!-- Tree Leaves (Bottom to Top) -->
+  <path d="M 32 26 L 10 46 L 54 46 Z" fill="url(#tree)"/>
+  <path d="M 32 16 L 14 34 L 50 34 Z" fill="url(#tree)"/>
+  
+  <!-- Jolly Ornaments -->
+  <circle cx="28" cy="28" r="2.5" fill="#FFD166"/>
+  <circle cx="38" cy="38" r="2.5" fill="#FFD166"/>
+  <circle cx="22" cy="40" r="2.5" fill="#118AB2"/>
+  <circle cx="44" cy="42" r="2.5" fill="#118AB2"/>
+  <circle cx="34" cy="22" r="2.5" fill="#FFFFFF"/>
+  <circle cx="28" cy="36" r="2.5" fill="#FFFFFF"/>
+  
+  <!-- Bright Star on Top -->
+  <polygon points="32,8 34,12 39,12 35,15 36,20 32,17 28,20 29,15 25,12 30,12" fill="#FFD166"/>
+  
+  <!-- Falling Snowflakes -->
+  <circle cx="12" cy="16" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="52" cy="20" r="1" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="48" cy="8" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="16" cy="30" r="1" fill="#FFFFFF" opacity="0.6"/>
 </svg>
