@@ -9,9 +9,7 @@
       <stop offset="100%" stop-color="#208B3A"/>
     </linearGradient>
   </defs>
-  
-  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
-  
+  <rect width="64" height="64" fill="url(#bg)"/>
   <!-- Snow on the ground -->
   <path d="M 0 54 Q 16 46 32 50 T 64 54 L 64 64 L 0 64 Z" fill="#FFFFFF" opacity="0.95"/>
   

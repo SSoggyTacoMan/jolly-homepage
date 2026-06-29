@@ -137,16 +137,16 @@ body.performance-mode .quick-link:hover { background: linear-gradient(145deg, rg
   width: 58px;
   height: 58px;
   border-radius: 20px;
-  display: grid;
-  place-items: center;
+  display: block;
   overflow: hidden;
-  background: linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.06));
   border: 1px solid rgba(255,255,255,.30);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.36), 0 14px 34px rgba(0,0,0,.24);
 }
 .brand-mark img {
-  width: 44px;
-  height: 44px;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .brand-copy strong {
