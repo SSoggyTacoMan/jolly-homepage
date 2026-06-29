@@ -31,7 +31,7 @@ body {
     url("../wallpapers/00-santa-village.svg");
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
+  background-attachment: scroll;
   overflow-x: hidden;
 }
 
@@ -83,11 +83,34 @@ button { cursor: pointer; }
     radial-gradient(circle at 59px 15px, #ffe16f 0 5px, transparent 6px),
     linear-gradient(90deg, transparent 0 10px, rgba(255,255,255,.28) 10px 12px, transparent 12px 25px);
   background-size: 75px 22px, 75px 22px, 75px 22px, 75px 22px;
-  filter: drop-shadow(0 0 8px rgba(255, 230, 120, 0.72));
+  filter: drop-shadow(0 0 5px rgba(255, 230, 120, 0.46));
 }
 
 body.no-snow #snow-canvas { display: none; }
 body.no-lights #light-string { display: none; }
+
+body.performance-mode .panel {
+  backdrop-filter: blur(4px) saturate(1.02);
+  -webkit-backdrop-filter: blur(4px) saturate(1.02);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.14), rgba(255,255,255,.055)),
+    rgba(18, 48, 42, .70);
+}
+
+body.performance-mode .settings-dialog,
+body.performance-mode .link-dialog {
+  backdrop-filter: blur(6px) saturate(1.04);
+  -webkit-backdrop-filter: blur(6px) saturate(1.04);
+}
+
+body.performance-mode .button:hover { transform: none; }
+body.performance-mode #light-string { filter: none; }
+body.performance-mode .quick-link:hover { background: linear-gradient(145deg, rgba(255,255,255,.14), rgba(255,255,255,.06)); }
+
+@media (prefers-reduced-motion: reduce) {
+  #snow-canvas { display: none; }
+  .button:hover { transform: none; }
+}
 
 .shell {
   width: min(1320px, calc(100% - 56px));
@@ -183,8 +206,8 @@ body.no-lights #light-string { display: none; }
     linear-gradient(145deg, rgba(255,255,255,.17), rgba(255,255,255,.055)),
     var(--glass);
   box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.22);
-  backdrop-filter: blur(24px) saturate(1.3);
-  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  backdrop-filter: blur(10px) saturate(1.12);
+  -webkit-backdrop-filter: blur(10px) saturate(1.12);
 }
 
 .button {
@@ -558,7 +581,7 @@ textarea::placeholder { color: rgba(255,248,233,.54); }
   padding: 0;
   background: rgba(15, 42, 37, .88);
   box-shadow: 0 28px 120px rgba(0,0,0,.45);
-  backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.12);
 }
 .settings-dialog::backdrop, .link-dialog::backdrop { background: rgba(3, 10, 9, .56); }
 .settings-form, .link-form { padding: 24px; }
@@ -646,7 +669,7 @@ textarea::placeholder { color: rgba(255,248,233,.54); }
   color: #143027;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   font-weight: 1000;
-  transition: .2s ease;
+  transition: opacity .18s ease, transform .18s ease;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -673,3 +696,16 @@ textarea::placeholder { color: rgba(255,248,233,.54); }
   .todo-item { grid-template-columns: auto 1fr; }
   .todo-actions { grid-column: 1 / -1; }
 }
+
+.brand-mark .logo-home { fill: #fff2c9; stroke: rgba(14, 48, 39, .45); stroke-width: 2; }
+.brand-mark .logo-roof { fill: none; stroke: #ff706a; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+.brand-mark .logo-snow { fill: none; stroke: #fff8e9; stroke-width: 5; stroke-linecap: round; }
+.brand-mark .logo-door { fill: #2f705f; }
+.brand-mark .logo-wreath { fill: none; stroke: #7feeaa; stroke-width: 3; }
+.brand-mark .logo-chimney { fill: none; stroke: #ffe071; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.brand-mark .logo-home { fill: #fff2c9 !important; stroke: rgba(14, 48, 39, .45) !important; stroke-width: 2 !important; }
+.brand-mark .logo-roof { fill: none !important; stroke: #ff706a !important; stroke-width: 8 !important; stroke-linecap: round !important; stroke-linejoin: round !important; }
+.brand-mark .logo-snow { fill: none !important; stroke: #fff8e9 !important; stroke-width: 5 !important; stroke-linecap: round !important; }
+.brand-mark .logo-door { fill: #2f705f !important; }
+.brand-mark .logo-wreath { fill: none !important; stroke: #7feeaa !important; stroke-width: 3 !important; }
+.brand-mark .logo-chimney { fill: none !important; stroke: #ffe071 !important; stroke-width: 5 !important; stroke-linecap: round !important; stroke-linejoin: round !important; }
