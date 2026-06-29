@@ -1,26 +1,21 @@
 # SnowTab
 
-A Christmas themed study homepage with quick links, a Pomodoro timer, a better task list, countdown, settings, and festive CSS decorations.
+SnowTab is a Christmas themed start page for studying. It has a quick link launch pad, a Pomodoro timer, a better task list, settings, a Christmas countdown, lights, snow, and a custom favicon.
 
 ## Features
 
+- Clean Christmas homepage
 - Search bar
-- Editable quick links
-- Christmas countdown
-- Pomodoro timer
-- Focus, short break, and long break modes
-- Timer presets
-- Custom minutes and seconds in settings
-- Task list with priorities
-- Task sprint estimates
-- Task filters for open, all, and done
-- Pick next task button
-- Select a task for the timer
-- Log focus sprints onto the selected task
-- Move, edit, delete, and finish tasks
-- Themes
-- Snow and Christmas lights toggles
-- Local storage saving
+- Quick links with editable cards
+- Pomodoro timer with focus, break, and long break modes
+- Timer settings with minutes and seconds
+- Todo list with priority, sprint estimates, due labels, search, sorting, filters, progress, and task actions
+- Selected task connects to the Pomodoro timer
+- Christmas countdown with festive progress bar
+- Theme picker
+- Toggle snow and Christmas lights
+- Settings saved with localStorage
+- Favicon included
 
 ## Run locally
 
@@ -29,13 +24,7 @@ pnpm install
 pnpm dev
 ```
 
-If you already installed an older broken copy, reset the install first:
-
-```bash
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
-pnpm dev
-```
+Then open the local URL shown in the terminal.
 
 ## Build
 
@@ -43,6 +32,19 @@ pnpm dev
 pnpm build
 ```
 
-## Notes
+## Terminal note
 
-This version pins Vite and includes PostCSS in dev dependencies so the CSS startup error does not happen.
+If your terminal says `uv_cwd` or `process.cwd failed`, your shell is inside a folder that no longer exists. Open a new terminal or run:
+
+```bash
+cd ..
+cd snowtab
+pnpm install
+pnpm dev
+```
+
+If that still fails, unzip the project again into a fresh folder and run the commands there.
+
+## License
+
+MIT
